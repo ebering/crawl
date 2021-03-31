@@ -447,6 +447,17 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_CALL_DOWN_LIGHTNING, "Call Down Lightning",
+    spschool::conjuration | spschool::air,
+    spflag::target | spflag::monster,
+    4,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    5, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
     SPELL_BLINK, "Blink",
     spschool::translocation,
     spflag::escape | spflag::selfench | spflag::emergency | spflag::utility,
@@ -526,7 +537,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_ENSLAVEMENT, "Enslavement",
+    SPELL_CHARMING, "Charm",
     spschool::hexes,
     spflag::dir_or_target | spflag::not_self | spflag::needs_tracer
         | spflag::WL_check,
@@ -534,7 +545,7 @@ static const struct spell_desc spelldata[] =
     200,
     LOS_RADIUS, LOS_RADIUS,
     3, 0,
-    TILEG_ENSLAVEMENT,
+    TILEG_CHARMING,
 },
 
 {
@@ -573,8 +584,7 @@ static const struct spell_desc spelldata[] =
 {
     SPELL_VAMPIRIC_DRAINING, "Vampiric Draining",
     spschool::necromancy,
-    spflag::dir_or_target | spflag::not_self | spflag::emergency
-        | spflag::selfench,
+    spflag::dir_or_target | spflag::not_self | spflag::emergency,
     3,
     200,
     1, 1,
@@ -619,7 +629,7 @@ static const struct spell_desc spelldata[] =
     SPELL_OZOCUBUS_REFRIGERATION, "Ozocubu's Refrigeration",
     spschool::ice,
     spflag::area,
-    6,
+    7,
     200,
     -1, -1,
     5, 0,
@@ -712,17 +722,6 @@ static const struct spell_desc spelldata[] =
     6, 6,
     6, 0,
     TILEG_POISON_ARROW,
-},
-
-{
-    SPELL_TWISTED_RESURRECTION, "Twisted Resurrection",
-    spschool::necromancy,
-    spflag::chaotic | spflag::utility | spflag::monster,
-    5,
-    200,
-    -1, -1,
-    4, 0,
-    TILEG_TWISTED_RESURRECTION,
 },
 
 // Monster-only, players can use Lugonu's ability
@@ -901,7 +900,7 @@ static const struct spell_desc spelldata[] =
     SPELL_BLADE_HANDS, "Blade Hands",
     spschool::transmutation,
     spflag::helpful | spflag::chaotic | spflag::utility,
-    5,
+    6,
     200,
     -1, -1,
     4, 0,
@@ -945,7 +944,7 @@ static const struct spell_desc spelldata[] =
     SPELL_HYDRA_FORM, "Hydra Form",
     spschool::transmutation,
     spflag::helpful | spflag::chaotic | spflag::utility,
-    6,
+    5,
     200,
     -1, -1,
     6, 0,
@@ -2382,6 +2381,17 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_CREEPING_FROST, "Creeping Frost",
+    spschool::conjuration | spschool::ice,
+    spflag::dir_or_target | spflag::monster,
+    5,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    2, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
     SPELL_LEGENDARY_DESTRUCTION, "Legendary Destruction",
     spschool::conjuration,
     spflag::dir_or_target | spflag::monster | spflag::needs_tracer,
@@ -2877,6 +2887,17 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_WEAKENING_GAZE, "Weakening Gaze",
+    spschool::hexes,
+    spflag::target | spflag::not_self | spflag::monster,
+    4,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    0, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
     SPELL_DEATH_RATTLE, "Death Rattle",
     spschool::conjuration | spschool::necromancy | spschool::air,
     spflag::dir_or_target | spflag::monster,
@@ -3364,6 +3385,95 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_SUMMON_TZITZIMITL, "Summon Tzitzimitl",
+    spschool::summoning | spschool::necromancy,
+    spflag::monster | spflag::mons_abjure,
+    8,
+    0,
+    -1, -1,
+    6, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
+    SPELL_SUMMON_HELL_SENTINEL, "Summon Hell Sentinel",
+    spschool::summoning,
+    spflag::monster | spflag::mons_abjure,
+    8,
+    0,
+    -1, -1,
+    6, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
+    SPELL_ANIMATE_ARMOUR, "Animate Armour",
+    spschool::summoning | spschool::earth,
+    spflag::none,
+    4,
+    50,
+    -1, -1,
+    4, 0,
+    TILEG_ANIMATE_ARMOUR,
+},
+
+{
+    SPELL_MANIFOLD_ASSAULT, "Manifold Assault",
+    spschool::translocation,
+    spflag::no_ghost,
+    5,
+    100,
+    -1, -1,
+    5, 0,
+    TILEG_MANIFOLD_ASSAULT,
+},
+
+{
+    SPELL_GOAD_BEASTS, "Goad Beasts",
+    spschool::hexes,
+    spflag::area | spflag::monster | spflag::selfench,
+    6,
+    0,
+    -1, -1,
+    5, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
+    SPELL_CONCENTRATE_VENOM, "Concentrate Venom",
+    spschool::poison,
+    spflag::dir_or_target | spflag::not_self | spflag::helpful
+        | spflag::needs_tracer | spflag::utility | spflag::monster,
+    5,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    5, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
+    SPELL_ERUPTION, "Eruption",
+    spschool::conjuration | spschool::fire | spschool::earth,
+    spflag::target | spflag::not_self | spflag::needs_tracer | spflag::monster,
+    5,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    5, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
+    SPELL_PYROCLASTIC_SURGE, "Pyroclastic Surge",
+    spschool::conjuration | spschool::fire | spschool::earth,
+    spflag::dir_or_target | spflag::monster,
+    5,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    2, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
     SPELL_NO_SPELL, "nonexistent spell",
     spschool::none,
     spflag::testing,
@@ -3456,6 +3566,7 @@ AXED_SPELL(SPELL_SCATTERSHOT, "Scattershot")
 AXED_SPELL(SPELL_SUMMON_SWARM, "Summon swarm")
 AXED_SPELL(SPELL_CLOUD_CONE, "Cloud Cone")
 AXED_SPELL(SPELL_RING_OF_THUNDER, "Ring of Thunder")
+AXED_SPELL(SPELL_TWISTED_RESURRECTION, "Twisted Resurrection")
 #endif
 
 };

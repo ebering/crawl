@@ -35,12 +35,6 @@
 
 int _xom_factor(bool was_known);
 
-bool you_drinkless(bool temp)
-{
-    return you.undead_state(temp) == US_UNDEAD
-           && you.species != SP_GHOUL;
-}
-
 PotionEffect::PotionEffect(const potion_type pot)
     : potion_name(potion_type_name(pot)), kind(pot)
 { }
@@ -329,7 +323,6 @@ public:
 
     bool effect(bool=true, int pow = 40, bool=true) const override
     {
-        you.attribute[ATTR_FLIGHT_UNCANCELLABLE] = 1;
         fly_player(pow);
         return you.airborne();
     }
@@ -344,6 +337,25 @@ public:
     static const PotionCancellation &instance()
     {
         static PotionCancellation inst; return inst;
+    }
+
+    bool can_quaff(string *reason = nullptr) const override
+    {
+        if (!player_is_cancellable())
+        {
+            if (reason)
+                *reason = "Drinking this now will have no effect.";
+            return false;
+        }
+
+        return true;
+    }
+
+    bool quaff(bool was_known) const override {
+        if (was_known && !check_known_quaff())
+            return false;
+
+        return effect(was_known);
     }
 
     bool effect(bool=true, int=40, bool=true) const override
@@ -485,7 +497,7 @@ public:
 
         // these are included in default force_more_message
         const int exp = 7500 * you.experience_level;
-        if (you.species == SP_GNOLL)
+        if (you.has_mutation(MUT_DISTRIBUTED_TRAINING))
         {
             you.exp_available += exp;
             train_skills();
@@ -517,7 +529,12 @@ public:
         if (you.magic_points == you.max_magic_points)
         {
             if (reason)
-                *reason = "Your magic is already full.";
+            {
+                if (you.max_magic_points)
+                    *reason = "Your magic is already full.";
+                else
+                    *reason = "You have no magic to restore.";
+            }
             return false;
         }
         return true;
@@ -549,7 +566,7 @@ public:
 
     bool effect(bool was_known = true, int = 40, bool=true) const override
     {
-        if (you.species == SP_VAMPIRE && !you.vampire_alive)
+        if (you.is_lifeless_undead())
         {
             mpr("You feel slightly irritated.");
             return false;

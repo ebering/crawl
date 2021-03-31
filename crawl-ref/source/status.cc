@@ -17,7 +17,6 @@
 #include "options.h"
 #include "orb.h" // orb_limits_translocation in fill_status_info
 #include "player-stats.h"
-#include "potion.h" // you_drinkless
 #include "random.h" // for midpoint_msg.offset() in duration-data
 #include "religion.h"
 #include "spl-summoning.h" // NEXT_DOOM_HOUND_KEY in duration-data
@@ -198,7 +197,7 @@ bool fill_status_info(int status, status_info& inf)
         break;
 
     case DUR_NO_POTIONS:
-        if (you_drinkless())
+        if (!you.can_drink(false))
             inf.light_colour = DARKGREY;
         break;
 
@@ -273,7 +272,7 @@ bool fill_status_info(int status, status_info& inf)
         break;
 
     case STATUS_ALIVE_STATE:
-        if (you.species == SP_VAMPIRE)
+        if (you.has_mutation(MUT_VAMPIRISM))
         {
             if (!you.vampire_alive)
             {
@@ -547,19 +546,6 @@ bool fill_status_info(int status, status_info& inf)
         }
         break;
 
-    case STATUS_ELIXIR:
-        if (you.duration[DUR_ELIXIR_HEALTH] || you.duration[DUR_ELIXIR_MAGIC])
-        {
-            if (you.duration[DUR_ELIXIR_HEALTH] && you.duration[DUR_ELIXIR_MAGIC])
-                inf.light_colour = WHITE;
-            else if (you.duration[DUR_ELIXIR_HEALTH])
-                inf.light_colour = LIGHTGREEN;
-            else
-                inf.light_colour = LIGHTBLUE;
-            inf.light_text   = "Elixir";
-        }
-        break;
-
     case STATUS_MAGIC_SAPPED:
         if (you.props[SAP_MAGIC_KEY].get_int() >= 3)
         {
@@ -814,7 +800,7 @@ static void _describe_regen(status_info& inf)
         }
         _mark_expiring(inf, dur_expiring(DUR_TROGS_HAND));
     }
-    else if (you.species == SP_VAMPIRE && you.vampire_alive)
+    else if (you.has_mutation(MUT_VAMPIRISM) && you.vampire_alive)
     {
         inf.short_text = you.disease ? "recuperating" : "regenerating";
         inf.short_text += " quickly";
@@ -920,7 +906,7 @@ static void _describe_transform(status_info& inf)
     inf.short_text = form->get_long_name();
     inf.long_text = form->get_description();
 
-    const bool vampbat = (you.species == SP_VAMPIRE
+    const bool vampbat = (you.get_mutation_level(MUT_VAMPIRISM) >= 2
                           && you.form == transformation::bat);
     const bool expire  = dur_expiring(DUR_TRANSFORMATION) && !vampbat;
 

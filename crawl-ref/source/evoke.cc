@@ -180,22 +180,24 @@ static bool _lightning_rod(dist *preselect)
 void black_drac_breath()
 {
     const int num_shots = roll_dice(2, 1 + you.experience_level / 7);
-    const int range = you.experience_level / 3 + 5; // 5--14
-    const int power = 25 + you.experience_level; // 25-52
+    const int range = you.experience_level / 3 + 5; // 5-14
+    const int power = 25 + (you.form == transformation::dragon
+                            ? 2 * you.experience_level : you.experience_level);
     for (int i = 0; i < num_shots; ++i)
         _spray_lightning(range, power);
 }
 
 /**
- * Returns the MP cost of zapping a wand:
- *     3 if player has MP-powered wands and enough MP available,
- *     1-2 if player has MP-powered wands and only 1-2 MP left,
- *     0 otherwise.
+ * Returns the MP cost of zapping a wand, depending on the player's MP-powered wands
+ * level and their available MP (or HP, if they're a djinn).
  */
 int wand_mp_cost()
 {
+    const int cost = you.get_mutation_level(MUT_MP_WANDS) * 3;
+    if (you.has_mutation(MUT_HP_CASTING))
+        return min(you.hp - 1, cost);
     // Update mutation-data.h when updating this value.
-    return min(you.magic_points, you.get_mutation_level(MUT_MP_WANDS) * 3);
+    return min(you.magic_points, cost);
 }
 
 int wand_power()
@@ -245,6 +247,7 @@ void zap_wand(int slot, dist *_target)
 
     const int mp_cost = wand_mp_cost();
     const int power = wand_power();
+    pay_mp(mp_cost);
 
     const spell_type spell =
         spell_in_wand(static_cast<wand_type>(wand.sub_type));
@@ -252,9 +255,13 @@ void zap_wand(int slot, dist *_target)
     spret ret = your_spells(spell, power, false, &wand, _target);
 
     if (ret == spret::abort)
+    {
+        refund_mp(mp_cost);
         return;
+    }
     else if (ret == spret::fail)
     {
+        refund_mp(mp_cost);
         canned_msg(MSG_NOTHING_HAPPENS);
         you.turn_is_over = true;
         return;
@@ -262,7 +269,7 @@ void zap_wand(int slot, dist *_target)
 
     // Spend MP.
     if (mp_cost)
-        dec_mp(mp_cost, false);
+        finalize_mp_cost();
 
     // Take off a charge.
     wand.charges--;
@@ -282,111 +289,12 @@ void zap_wand(int slot, dist *_target)
     you.turn_is_over = true;
 }
 
-// return a slot that has manual for given skill, or -1 if none exists
-// in case of multiple manuals the one with the fewest charges is returned
-int manual_slot_for_skill(skill_type skill)
-{
-    int slot = -1;
-    int charges = -1;
-
-    FixedVector<item_def,ENDOFPACK>::const_pointer iter = you.inv.begin();
-    for (;iter!=you.inv.end(); ++iter)
-    {
-        if (iter->base_type != OBJ_BOOKS || iter->sub_type != BOOK_MANUAL)
-            continue;
-
-        if (iter->skill != skill || iter->skill_points == 0)
-            continue;
-
-        if (slot != -1 && iter->skill_points > charges)
-            continue;
-
-        slot = iter - you.inv.begin();
-        charges = iter->skill_points;
-    }
-
-    return slot;
-}
-
-int get_all_manual_charges_for_skill(skill_type skill)
-{
-    int charges = 0;
-
-    FixedVector<item_def,ENDOFPACK>::const_pointer iter = you.inv.begin();
-    for (;iter!=you.inv.end(); ++iter)
-    {
-        if (iter->base_type != OBJ_BOOKS || iter->sub_type != BOOK_MANUAL)
-            continue;
-
-        if (iter->skill != skill || iter->skill_points == 0)
-            continue;
-
-        charges += iter->skill_points;
-    }
-
-    return charges;
-}
-
-bool skill_has_manual(skill_type skill)
-{
-    return manual_slot_for_skill(skill) != -1;
-}
-
-void finish_manual(int slot)
-{
-    item_def& manual(you.inv[slot]);
-    const skill_type skill = static_cast<skill_type>(manual.plus);
-
-    mprf("You have finished your manual of %s and toss it away.",
-         skill_name(skill));
-    dec_inv_item_quantity(slot, 1);
-}
-
-void get_all_manual_charges(vector<int> &charges)
-{
-    charges.clear();
-
-    FixedVector<item_def,ENDOFPACK>::const_pointer iter = you.inv.begin();
-    for (;iter!=you.inv.end(); ++iter)
-    {
-        if (iter->base_type != OBJ_BOOKS || iter->sub_type != BOOK_MANUAL)
-            continue;
-
-        charges.push_back(iter->skill_points);
-    }
-}
-
-void set_all_manual_charges(const vector<int> &charges)
-{
-    auto charge_iter = charges.begin();
-    for (item_def &item : you.inv)
-    {
-        if (item.base_type != OBJ_BOOKS || item.sub_type != BOOK_MANUAL)
-            continue;
-
-        ASSERT(charge_iter != charges.end());
-        item.skill_points = *charge_iter;
-        charge_iter++;
-    }
-    ASSERT(charge_iter == charges.end());
-}
-
 string manual_skill_names(bool short_text)
 {
     skill_set skills;
-
-    FixedVector<item_def,ENDOFPACK>::const_pointer iter = you.inv.begin();
-    for (;iter!=you.inv.end(); ++iter)
-    {
-        if (iter->base_type != OBJ_BOOKS
-            || iter->sub_type != BOOK_MANUAL
-            || is_useless_item(*iter))
-        {
-            continue;
-        }
-
-        skills.insert(static_cast<skill_type>(iter->plus));
-    }
+    for (skill_type sk = SK_FIRST_SKILL; sk < NUM_SKILLS; sk++)
+        if (you.skill_manual_points[sk])
+            skills.insert(sk);
 
     if (short_text && skills.size() > 1)
     {
@@ -464,21 +372,9 @@ static bool _make_zig(item_def &zig)
     return true;
 }
 
-struct dist_sorter
-{
-    coord_def pos;
-    bool operator()(const actor* a, const actor* b)
-    {
-        return a->pos().distance_from(pos) > b->pos().distance_from(pos);
-    }
-};
-
 static int _gale_push_dist(const actor* agent, const actor* victim, int pow)
 {
     int dist = 1 + random2(pow / 20);
-
-    if (victim->airborne())
-        dist++;
 
     if (victim->body_size(PSIZE_BODY) < SIZE_MEDIUM)
         dist++;
@@ -526,7 +422,7 @@ void wind_blast(actor* agent, int pow, coord_def target, bool card)
         act_list.push_back(*ai);
     }
 
-    dist_sorter sorter = {agent->pos()};
+    far_to_near_sorter sorter = {agent->pos()};
     sort(act_list.begin(), act_list.end(), sorter);
 
     bolt wind_beam;
@@ -964,9 +860,9 @@ static spret _tremorstone()
         return act && _valid_tremorstone_target(*act->as_monster());
     };
     if ((!see_target
-        && !yesno("You can't see anything, throw a tremorstone anyway?",
+        && !yesno("You can't see anything, release a tremorstone anyway?",
                  true, 'n'))
-        || stop_attack_prompt(hitfunc, "throw a tremorstone", vulnerable))
+        || stop_attack_prompt(hitfunc, "release a tremorstone", vulnerable))
     {
         return spret::abort;
     }

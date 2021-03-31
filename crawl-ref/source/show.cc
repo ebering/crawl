@@ -226,7 +226,7 @@ static show_item_type _item_to_show_code(const item_def &item)
     }
 }
 
-void update_item_at(const coord_def &gp, bool detected, bool wizard)
+void update_item_at(const coord_def &gp, bool wizard)
 {
     if (!in_bounds(gp))
         return;
@@ -252,15 +252,12 @@ void update_item_at(const coord_def &gp, bool detected, bool wizard)
     }
     else
     {
-        if (detected)
-            StashTrack.add_stash(gp);
-
         const vector<item_def> stash = item_list_in_stash(gp);
         if (stash.empty())
             return;
 
         eitem = stash[0];
-        if (!detected && stash.size() > 1)
+        if (stash.size() > 1)
             more_items = true;
     }
     env.map_knowledge(gp).set_item(get_item_known_info(eitem), more_items);
@@ -543,7 +540,7 @@ void show_init(layers_type layers)
     ASSERT(you.on_current_level);
 
     vector <coord_def> update_locs;
-    for (radius_iterator ri(you.pos(), you.xray_vision ? LOS_NONE : LOS_DEFAULT); ri; ++ri)
+    for (vision_iterator ri(you); ri; ++ri)
     {
         show_update_at(*ri, layers);
         update_locs.push_back(*ri);

@@ -206,6 +206,7 @@ static void _ench_animation(int flavour, const monster* mon, bool force)
     case BEAM_PAIN:
     case BEAM_AGONY:
     case BEAM_VILE_CLUTCH:
+    case BEAM_VAMPIRIC_DRAINING:
         elem = ETC_UNHOLY;
         break;
     case BEAM_DISPEL_UNDEAD:
@@ -541,12 +542,6 @@ void zappy(zap_type z_type, int power, bool is_monster, bolt &pbolt)
 
     if (pbolt.origin_spell == SPELL_NO_SPELL)
         pbolt.origin_spell = zap_to_spell(z_type);
-
-    if (z_type == ZAP_BREATHE_FIRE && you.species == SP_RED_DRACONIAN
-        && !is_monster)
-    {
-        pbolt.origin_spell = SPELL_SEARING_BREATH;
-    }
 
     if (pbolt.loudness == 0)
         pbolt.loudness = zinfo->hit_loudness;
@@ -1029,10 +1024,6 @@ bool bolt::need_regress() const
 
 void bolt::affect_cell()
 {
-    // Shooting through clouds affects accuracy.
-    if (cloud_at(pos()) && hit != AUTOMATIC_HIT)
-        hit = max(hit - 2, 0);
-
     fake_flavour();
 
     // Note that this can change the solidity of the wall.
@@ -1480,7 +1471,18 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
         if (!hurted && doFlavouredEffects && original > 0)
             simple_monster_message(*mons, " completely resists.");
         else if (doFlavouredEffects && !one_chance_in(3))
-            poison_monster(mons, pbolt.agent());
+        {
+            if (pbolt.origin_spell == SPELL_SPIT_POISON &&
+                pbolt.agent(true)->is_monster() &&
+                pbolt.agent(true)->as_monster()->has_ench(ENCH_CONCENTRATE_VENOM))
+            {
+                // set the cause to the reflected agent for piety &c.
+                curare_actor(pbolt.agent(), mons, 2, "concentrated venom",
+                             pbolt.agent(true)->name(DESC_PLAIN));
+            }
+            else
+                poison_monster(mons, pbolt.agent());
+        }
 
         break;
     }
@@ -1632,16 +1634,6 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
     case BEAM_SPORE:
         if (mons->type == MONS_BALLISTOMYCETE)
             hurted = 0;
-        break;
-
-    case BEAM_AIR:
-        if (mons->airborne())
-            hurted += hurted / 2;
-        if (original < hurted)
-        {
-            if (doFlavouredEffects)
-                simple_monster_message(*mons, " gets badly buffeted.");
-        }
         break;
 
     case BEAM_ENSNARE:
@@ -2204,6 +2196,43 @@ static void _malign_offering_effect(actor* victim, const actor* agent, int damag
     }
 }
 
+static void _vampiric_draining_effect(actor* victim, actor* agent, int damage)
+{
+    if (damage < 1 || !actor_is_susceptible_to_vampirism(*victim))
+        return;
+
+    mprf("%s %s life force from %s%s",
+         agent->name(DESC_THE).c_str(),
+         agent->conj_verb("draw").c_str(),
+         victim->name(DESC_THE).c_str(),
+         attack_strength_punctuation(damage).c_str());
+
+    const int drain_amount = victim->hurt(agent, damage,
+                                          BEAM_VAMPIRIC_DRAINING,
+                                          KILLED_BY_BEAM, "",
+                                          "by vampiric draining");
+
+    if (agent->is_monster())
+    {
+        const int hp_gain = drain_amount * 2 / 3;
+        if (agent->heal(hp_gain))
+            simple_monster_message(*agent->as_monster(), " is healed by the life force!");
+    }
+    else
+    {
+        if (you.duration[DUR_DEATHS_DOOR] || you.hp == you.hp_max)
+            return;
+
+        const int hp_gain = div_rand_round(drain_amount, 2);
+        if (hp_gain)
+        {
+            mprf("You feel life coursing into your body%s",
+                 attack_strength_punctuation(hp_gain).c_str());
+            inc_hp(hp_gain);
+        }
+    }
+}
+
 /**
  * Turn a BEAM_UNRAVELLING beam into a BEAM_UNRAVELLED_MAGIC beam, and make
  * it explode appropriately.
@@ -2729,7 +2758,7 @@ void bolt::internal_ouch(int dam)
     }
     else if (is_death_effect)
     {
-        ouch(dam, KILLED_BY_SPORE, source_id,
+        ouch(dam, KILLED_BY_DEATH_EXPLOSION, source_id,
              aux_source.c_str(), true,
              source_name.empty() ? nullptr : source_name.c_str());
     }
@@ -2752,7 +2781,7 @@ void bolt::internal_ouch(int dam)
                 ouch(dam, KILLED_BY_TARGETING, MID_PLAYER, name.c_str());
         }
     }
-    else if (MON_KILL(thrower) || aux_source == "exploding inner flame")
+    else if (MON_KILL(thrower))
         ouch(dam, KILLED_BY_BEAM, source_id,
              aux_source.c_str(), true,
              source_name.empty() ? nullptr : source_name.c_str());
@@ -3049,8 +3078,11 @@ bool bolt::misses_player()
     if (flavour == BEAM_VISUAL)
         return true;
 
-    if (is_explosion || aimed_at_feet || auto_hit)
+    if ((is_explosion || auto_hit || aimed_at_feet)
+        && origin_spell != SPELL_CALL_DOWN_LIGHTNING)
+    {
         return false;
+    }
 
     const int dodge = you.evasion();
     int real_tohit  = hit;
@@ -3065,20 +3097,30 @@ bool bolt::misses_player()
         && !aimed_at_feet
         && SH > 0)
     {
-        // We use the original to-hit here.
-        // (so that effects increasing dodge chance don't increase block...?)
-        const int testhit = random2(hit * 130 / 100
-                                    + you.shield_block_penalty());
+        bool blocked = false;
+        if (hit == AUTOMATIC_HIT)
+        {
+            // 50% chance of blocking ench-type effects at 10 displayed sh
+            blocked = x_chance_in_y(SH, omnireflect_chance_denom(SH));
 
-        const int block = you.shield_bonus();
+            dprf(DIAG_BEAM, "%smnireflected: %d/%d chance",
+                 blocked ? "O" : "Not o", SH, omnireflect_chance_denom(SH));
+        }
+        else
+        {
+            // We use the original to-hit here.
+            // (so that effects increasing dodge chance don't increase
+            // block...?)
+            const int testhit = random2(hit * 130 / 100
+                                        + you.shield_block_penalty());
 
-        // 50% chance of blocking ench-type effects at 20 displayed sh
-        const bool omnireflected
-            = hit == AUTOMATIC_HIT
-              && x_chance_in_y(SH, omnireflect_chance_denom(SH));
+            const int block = you.shield_bonus();
 
-        dprf(DIAG_BEAM, "Beamshield: hit: %d, block %d", testhit, block);
-        if ((testhit < block && hit != AUTOMATIC_HIT) || omnireflected)
+            dprf(DIAG_BEAM, "Beamshield: hit: %d, block %d", testhit, block);
+            blocked = testhit < block;
+        }
+
+        if (blocked)
         {
             const string refl_name = name.empty() &&
                                      origin_spell != SPELL_NO_SPELL ?
@@ -3293,11 +3335,11 @@ void bolt::affect_player_enchantment(bool resistible)
         obvious_effect = beckon(you, *this);
         break;
 
-    case BEAM_ENSLAVE:
+    case BEAM_CHARM:
         mprf(MSGCH_WARN, "Your will is overpowered!");
         confuse_player(5 + random2(3));
         obvious_effect = true;
-        break;     // enslavement - confusion?
+        break;     // charming - confusion?
 
     case BEAM_BANISH:
         if (YOU_KILL(thrower))
@@ -3419,6 +3461,19 @@ void bolt::affect_player_enchantment(bool resistible)
         break;
     }
 
+    case BEAM_VAMPIRIC_DRAINING:
+    {
+        const int dam = resist_adjust_damage(&you, flavour, damage.roll());
+        if (dam && actor_is_susceptible_to_vampirism(you))
+        {
+            _vampiric_draining_effect(&you, agent(), dam);
+            obvious_effect = true;
+        }
+        else
+            canned_msg(MSG_YOU_UNAFFECTED);
+        break;
+    }
+
     case BEAM_VIRULENCE:
         // Those completely immune cannot be made more susceptible this way
         if (you.res_poison(false) >= 3)
@@ -3456,12 +3511,9 @@ void bolt::affect_player_enchantment(bool resistible)
         if (!amount)
             break;
         mprf(MSGCH_WARN, "You feel your power leaking away.");
-        dec_mp(amount);
-        if (agent() && (agent()->type == MONS_EYE_OF_DRAINING
-                        || agent()->type == MONS_GHOST_MOTH))
-        {
+        drain_mp(amount);
+        if (agent() && agent()->type == MONS_GHOST_MOTH)
             agent()->heal(amount);
-        }
         obvious_effect = true;
         break;
     }
@@ -3564,7 +3616,8 @@ static const vector<pie_effect> pie_effects = {
     {
         "lemon",
         [](const actor &defender) {
-            return defender.is_player() && !you_drinkless();
+            return defender.is_player() && (you.can_drink()
+                                            || you.duration[DUR_NO_POTIONS]); // allow stacking
         },
         [](actor &/*defender*/, const bolt &/*beam*/) {
             if (you.duration[DUR_NO_POTIONS])
@@ -3936,6 +3989,7 @@ void bolt::affect_player()
     pull_actor(&you, final_dam);
 
     if (origin_spell == SPELL_FLASH_FREEZE
+        || origin_spell == SPELL_CREEPING_FROST
         || name == "blast of ice"
         || origin_spell == SPELL_GLACIATE && !is_explosion)
     {
@@ -4126,10 +4180,10 @@ void bolt::handle_stop_attack_prompt(monster* mon)
     }
     // Handle enslaving monsters when OTR is up: give a prompt for attempting
     // to enslave monsters that don't have rPois with Toxic status.
-    else if (flavour == BEAM_ENSLAVE && you.duration[DUR_TOXIC_RADIANCE]
+    else if (flavour == BEAM_CHARM && you.duration[DUR_TOXIC_RADIANCE]
              && mon->res_poison() <= 0)
     {
-        string verb = make_stringf("enslave %s", mon->name(DESC_THE).c_str());
+        string verb = make_stringf("charm %s", mon->name(DESC_THE).c_str());
         if (otr_stop_summoning_prompt(verb))
         {
             beam_cancelled = true;
@@ -4461,7 +4515,7 @@ void bolt::knockback_actor(actor *act, int dam)
                      ? 7 + 0.27 * ench_power
                      : 17;
     const int weight = max_corpse_chunks(act->is_monster() ? act->type :
-                                   player_species_to_mons_species(you.species));
+                                                            you.mons_species());
 
     const coord_def oldpos = act->pos();
 
@@ -5029,6 +5083,8 @@ bool bolt::has_saving_throw() const
     case BEAM_INFESTATION:
     case BEAM_IRRESISTIBLE_CONFUSION:
     case BEAM_VILE_CLUTCH:
+    case BEAM_VAMPIRIC_DRAINING:
+    case BEAM_CONCENTRATE_VENOM:
         return false;
     case BEAM_VULNERABILITY:
         return !one_chance_in(3);  // Ignores HR 1/3 of the time
@@ -5090,6 +5146,10 @@ bool ench_flavour_affects_monster(beam_type flavour, const monster* mon,
         rc = (mon->res_negative_energy(intrinsic_only) < 3);
         break;
 
+    case BEAM_VAMPIRIC_DRAINING:
+        rc = actor_is_susceptible_to_vampirism(*mon);
+        break;
+
     case BEAM_VIRULENCE:
         rc = (mon->res_poison() < 3);
         break;
@@ -5115,7 +5175,7 @@ bool ench_flavour_affects_monster(beam_type flavour, const monster* mon,
         break;
 
     // These are special allies whose loyalty can't be so easily bent
-    case BEAM_ENSLAVE:
+    case BEAM_CHARM:
         rc = !(mons_is_hepliaklqana_ancestor(mon->type)
                || testbits(mon->flags, MF_DEMONIC_GUARDIAN));
         break;
@@ -5282,6 +5342,19 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         }
         mon->hurt(agent(), dam);
         return MON_AFFECTED;
+    }
+
+    case BEAM_VAMPIRIC_DRAINING:
+    {
+        const int dam = resist_adjust_damage(mon, flavour, damage.roll());
+        if (dam && actor_is_susceptible_to_vampirism(*mon))
+        {
+            _vampiric_draining_effect(mon, agent(), dam);
+            obvious_effect = true;
+            return MON_AFFECTED;
+        }
+        else
+            return MON_UNAFFECTED;
     }
 
     case BEAM_PAIN:
@@ -5462,7 +5535,7 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         return MON_AFFECTED;
     }
 
-    case BEAM_ENSLAVE:
+    case BEAM_CHARM:
         if (agent() && agent()->is_monster())
         {
             enchant_type good = (agent()->wont_attack()) ? ENCH_CHARM
@@ -5476,7 +5549,7 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
                 obvious_effect = mon->del_ench(bad);
                 return MON_AFFECTED;
             }
-            if (simple_monster_message(*mon, " is enslaved!"))
+            if (simple_monster_message(*mon, " is charmed!"))
                 obvious_effect = true;
             mon->add_ench(mon_enchant(good, 0, agent()));
             if (!obvious_effect && could_see && !you.can_see(*mon))
@@ -5640,11 +5713,8 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
                  apostrophise(mon->name(DESC_THE)).c_str());
         }
 
-        if (agent() && (agent()->type == MONS_EYE_OF_DRAINING
-                        || agent()->type == MONS_GHOST_MOTH))
-        {
+        if (agent() && agent()->type == MONS_GHOST_MOTH)
             agent()->heal(dur / BASELINE_DELAY);
-        }
         obvious_effect = true;
         break;
     }
@@ -5689,6 +5759,16 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         obvious_effect = true;
         return MON_AFFECTED;
     }
+
+    case BEAM_CONCENTRATE_VENOM:
+        dprf("trying to ench");
+        if (!mon->has_ench(ENCH_CONCENTRATE_VENOM)
+            && mon->add_ench(ENCH_CONCENTRATE_VENOM))
+        {
+            if (simple_monster_message(*mon, " seems to grow toxic."))
+                obvious_effect = true;
+        }
+        return MON_AFFECTED;
 
     default:
         break;
@@ -5933,6 +6013,12 @@ bool bolt::explode(bool show_more, bool hole_in_the_middle)
         {
             loudness = spell_effect_noise(origin_spell);
         }
+
+        // Make bloated husks quieter, both for balance (they're waking up
+        // whole levels!) and for theme (it's not a huge fireball, it's a big
+        // gas leak).
+        if (name == "blast of putrescent gases")
+            loudness = loudness * 2 / 3;
 
         // Lee's Rapid Deconstruction can target the tiles on the map
         // boundary.
@@ -6184,6 +6270,7 @@ bool bolt::nasty_to(const monster* mon) const
         case BEAM_AGONY:
         case BEAM_HIBERNATION:
         case BEAM_MINDBURST:
+        case BEAM_VAMPIRIC_DRAINING:
             return ench_flavour_affects_monster(flavour, mon);
         case BEAM_TUKIMAS_DANCE:
             return tukima_affects(*mon); // XXX: move to ench_flavour_affects?
@@ -6215,7 +6302,8 @@ bool bolt::nice_to(const monster_info& mi) const
         || flavour == BEAM_MIGHT
         || flavour == BEAM_AGILITY
         || flavour == BEAM_INVISIBILITY
-        || flavour == BEAM_RESISTANCE)
+        || flavour == BEAM_RESISTANCE
+        || flavour == BEAM_CONCENTRATE_VENOM)
     {
         return true;
     }
@@ -6414,7 +6502,7 @@ static string _beam_type_name(beam_type type)
     case BEAM_TELEPORT:              return "teleportation";
     case BEAM_POLYMORPH:             return "polymorph";
     case BEAM_MALMUTATE:             return "malmutation";
-    case BEAM_ENSLAVE:               return "enslave";
+    case BEAM_CHARM:                 return "charming";
     case BEAM_BANISH:                return "banishment";
     case BEAM_PAIN:                  return "pain";
     case BEAM_AGONY:                 return "agony";
@@ -6454,6 +6542,8 @@ static string _beam_type_name(beam_type type)
     case BEAM_IRRESISTIBLE_CONFUSION:return "confusion";
     case BEAM_INFESTATION:           return "infestation";
     case BEAM_VILE_CLUTCH:           return "vile clutch";
+    case BEAM_VAMPIRIC_DRAINING:     return "vampiric draining";
+    case BEAM_CONCENTRATE_VENOM:     return "concentrate venom";
 
     case NUM_BEAMS:                  die("invalid beam type");
     }
@@ -6488,7 +6578,7 @@ bool bolt::can_knockback(const actor &act, int dam) const
         return false;
 
     return flavour == BEAM_WATER && origin_spell == SPELL_PRIMAL_WAVE
-           || origin_spell == SPELL_CHILLING_BREATH && act.airborne()
+           || origin_spell == SPELL_CHILLING_BREATH && dam
            || origin_spell == SPELL_FORCE_LANCE && dam
            || origin_spell == SPELL_ISKENDERUNS_MYSTIC_BLAST && dam;
 }

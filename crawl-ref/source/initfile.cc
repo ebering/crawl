@@ -275,8 +275,8 @@ const vector<GameOption*> game_options::build_options_list()
         new IntGameOption(SIMPLE_NAME(rest_wait_percent), 100, 0, 100),
         new IntGameOption(SIMPLE_NAME(pickup_menu_limit), 1),
         new IntGameOption(SIMPLE_NAME(view_delay), DEFAULT_VIEW_DELAY, 0),
-        new IntGameOption(SIMPLE_NAME(fail_severity_to_confirm), 3, -1, 3),
-        new IntGameOption(SIMPLE_NAME(fail_severity_to_quiver), 3, -1, 1),
+        new IntGameOption(SIMPLE_NAME(fail_severity_to_confirm), 3, -1, 5),
+        new IntGameOption(SIMPLE_NAME(fail_severity_to_quiver), 3, -1, 5),
         new IntGameOption(SIMPLE_NAME(travel_delay), USING_DGL ? -1 : 20,
                           -1, 2000),
         new IntGameOption(SIMPLE_NAME(rest_delay), USING_DGL ? -1 : 0,
@@ -289,7 +289,7 @@ const vector<GameOption*> game_options::build_options_list()
         new IntGameOption(SIMPLE_NAME(item_stack_summary_minimum), 4),
         new IntGameOption(SIMPLE_NAME(level_map_cursor_step), 7, 1, 50),
         new IntGameOption(SIMPLE_NAME(dump_item_origin_price), -1, -1),
-        new IntGameOption(SIMPLE_NAME(dump_message_count), 20),
+        new IntGameOption(SIMPLE_NAME(dump_message_count), 40),
         new ListGameOption<text_pattern>(SIMPLE_NAME(confirm_action)),
         new ListGameOption<text_pattern>(SIMPLE_NAME(drop_filter)),
         new ListGameOption<text_pattern>(SIMPLE_NAME(note_monsters)),
@@ -320,7 +320,6 @@ const vector<GameOption*> game_options::build_options_list()
         new BoolGameOption(SIMPLE_NAME(restart_after_save), true),
         new BoolGameOption(SIMPLE_NAME(newgame_after_quit), false),
         new StringGameOption(SIMPLE_NAME(map_file_name), ""),
-        new StringGameOption(SIMPLE_NAME(save_dir), _get_save_path("saves/")),
         new StringGameOption(SIMPLE_NAME(morgue_dir),
                              _get_save_path("morgue/")),
 #endif
@@ -705,6 +704,7 @@ static game_type _str_to_gametype(const string& s)
 }
 #endif
 
+// XX move to species.cc?
 static string _species_to_str(species_type sp)
 {
     if (sp == SP_RANDOM)
@@ -712,9 +712,10 @@ static string _species_to_str(species_type sp)
     else if (sp == SP_VIABLE)
         return "viable";
     else
-        return species_name(sp);
+        return species::name(sp);
 }
 
+// XX move to species.cc?
 static species_type _str_to_species(const string &str)
 {
     if (str == "random")
@@ -724,13 +725,13 @@ static species_type _str_to_species(const string &str)
 
     species_type ret = SP_UNKNOWN;
     if (str.length() == 2) // scan abbreviations
-        ret = get_species_by_abbrev(str.c_str());
+        ret = species::from_abbrev(str.c_str());
 
     // if we don't have a match, scan the full names
     if (ret == SP_UNKNOWN && str.length() >= 2)
-        ret = find_species_from_string(str, true);
+        ret = species::from_str_loose(str, true);
 
-    if (!is_starting_species(ret))
+    if (!species::is_starting_species(ret))
         ret = SP_UNKNOWN;
 
     if (ret == SP_UNKNOWN)
@@ -1029,8 +1030,8 @@ void game_options::reset_options()
 
     macro_dir = SysEnv.macro_dir;
 
-#ifdef DGAMELAUNCH
     save_dir = _get_save_path("saves/");
+#ifdef DGAMELAUNCH
     morgue_dir = _get_save_path("morgue/");
 #else
     if (macro_dir.empty())
@@ -2971,6 +2972,15 @@ void game_options::read_option_line(const string &str, bool runscript)
         // We shouldn't bother to allocate this a second time
         // if the user puts two crawl_dir lines in the init file.
         SysEnv.crawl_dir = field;
+    }
+#endif
+#ifndef SAVE_DIR_PATH
+    else if (key == "save_dir")
+    {
+        save_dir = field;
+#ifndef SHARED_DIR_PATH
+        shared_dir = save_dir;
+#endif
     }
     else if (key == "macro_dir")
         macro_dir = field;
