@@ -83,15 +83,16 @@ spret cast_poisonous_vapours(int pow, const dist &beam, bool fail)
     }
 
     monster* mons = monster_at(beam.target);
-    if (!mons || !you.can_see(*mons))
+    if (!mons || mons->submerged())
     {
-        mpr("You see nothing there to target!");
-        return spret::abort;
+        fail_check();
+        canned_msg(MSG_SPELL_FIZZLES);
+        return spret::success; // still losing a turn
     }
 
     if (actor_cloud_immune(*mons, CLOUD_POISON) && mons->observable())
     {
-        mprf("%s cannot be affected by poisonous vapours!",
+        mprf("But poisonous vapours would do no harm to %s!",
              mons->name(DESC_THE).c_str());
         return spret::abort;
     }
@@ -114,8 +115,7 @@ spret cast_poisonous_vapours(int pow, const dist &beam, bool fail)
     {
         // Reinforce the cloud.
         mpr("The poisonous vapours increase!");
-        // in this case, we're using auts
-        cloud->decay += cloud_duration * BASELINE_DELAY;
+        cloud->decay += cloud_duration * 10; // in this case, we're using auts
         cloud->set_whose(KC_YOU);
     }
     else
@@ -251,28 +251,29 @@ spret corpse_rot(actor* caster, bool actual)
 
     for (radius_iterator ri(center, LOS_NO_TRANS); ri; ++ri)
     {
-        for (stack_iterator si(*ri); si; ++si)
-            if (si->is_type(OBJ_CORPSES, CORPSE_BODY))
-            {
-                if (!actual)
-                    return spret::success;
-                // Found a corpse. Skeletonise it if possible.
-                if (!mons_skeleton(si->mon_type))
+        if (!is_sanctuary(*ri) && !cloud_at(*ri))
+            for (stack_iterator si(*ri); si; ++si)
+                if (si->is_type(OBJ_CORPSES, CORPSE_BODY))
                 {
-                    item_was_destroyed(*si);
-                    destroy_item(si->index());
+                    if (!actual)
+                        return spret::success;
+                    // Found a corpse. Skeletonise it if possible.
+                    if (!mons_skeleton(si->mon_type))
+                    {
+                        item_was_destroyed(*si);
+                        destroy_item(si->index());
+                    }
+                    else
+                        turn_corpse_into_skeleton(*si);
+
+                    if (!saw_rot && you.see_cell(*ri))
+                        saw_rot = true;
+
+                    ++did_rot;
+
+                    // Don't look for more corpses here.
+                    break;
                 }
-                else
-                    turn_corpse_into_skeleton(*si);
-
-                if (!saw_rot && you.see_cell(*ri))
-                    saw_rot = true;
-
-                ++did_rot;
-
-                // Don't look for more corpses here.
-                break;
-            }
     }
     if (!actual)
         return spret::abort;

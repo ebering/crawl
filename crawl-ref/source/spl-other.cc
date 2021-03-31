@@ -17,7 +17,6 @@
 #include "message.h"
 #include "mon-place.h"
 #include "mon-util.h"
-#include "movement.h" // passwall
 #include "place.h"
 #include "religion.h"
 #include "spl-util.h"
@@ -31,7 +30,7 @@ spret cast_sublimation_of_blood(int pow, bool fail)
         mpr("You can't draw power from your own body while in death's door.");
     else if (!you.can_bleed())
     {
-        if (you.has_mutation(MUT_VAMPIRISM))
+        if (you.species == SP_VAMPIRE)
             mpr("You don't have enough blood to draw power from your own body.");
         else
             mpr("Your body is bloodless.");
@@ -381,10 +380,6 @@ bool passwall_path::check_moveto() const
 
 spret cast_passwall(const coord_def& c, int pow, bool fail)
 {
-    // prompt player to end position-based ice spells
-    if (cancel_harmful_move(false))
-        return spret::abort;
-
     coord_def delta = c - you.pos();
     passwall_path p(you, delta, spell_range(SPELL_PASSWALL, pow));
     string fail_msg;

@@ -1366,7 +1366,7 @@ static void _tag_construct_char(writer &th)
     if (crawl_state.game_is_tutorial())
         marshallString2(th, crawl_state.map);
 
-    marshallString2(th, species::name(you.species));
+    marshallString2(th, species_name(you.species));
     marshallString2(th, you.religion ? god_name(you.religion) : "");
 
     // separate from the tutorial so we don't have to bump TAG_CHR_FORMAT
@@ -1487,7 +1487,6 @@ static void _tag_construct_you(writer &th)
         marshallInt(th, you.ct_skill_points[j]);
         marshallByte(th, you.skill_order[j]);   // skills ordering
         marshallInt(th, you.training_targets[j]);
-        marshallInt(th, you.skill_manual_points[j]);
     }
 
     marshallBoolean(th, you.auto_training);
@@ -1501,6 +1500,11 @@ static void _tag_construct_you(writer &th)
 
     marshallByte(th, you.skill_menu_do);
     marshallByte(th, you.skill_menu_view);
+
+    marshallInt(th, you.transfer_from_skill);
+    marshallInt(th, you.transfer_to_skill);
+    marshallInt(th, you.transfer_skill_points);
+    marshallInt(th, you.transfer_total_skill_points);
 
     CANARY;
 
@@ -2482,26 +2486,11 @@ void remove_removed_library_spells(FixedBitVector<NUM_SPELLS>& lib)
         lib.set(i, lib[i] && !spell_removed(static_cast<spell_type>(i)));
 }
 
-
-static void _fixup_species_mutations(mutation_type mut)
-{
-    // this is *not safe* to use with any mutations where there could be a
-    // physiology conflict, or with mutations where there could be random
-    // upgrades on top of the innate levels (e.g. MUT_ROLL).
-    int total = 0;
-    // Don't perma_mutate since that gives messages.
-    for (const auto& lum : get_species_def(you.species).level_up_mutations)
-        if (lum.xp_level <= you.experience_level && lum.mut == mut)
-            total += lum.mut_level;
-
-    you.innate_mutation[mut] = you.mutation[mut] = total;
-}
-
 static void _tag_read_you(reader &th)
 {
     int count;
 
-    ASSERT(species::is_valid(you.species));
+    ASSERT(species_type_valid(you.species));
     ASSERT(job_type_valid(you.char_class));
     ASSERT_RANGE(you.experience_level, 1, 28);
     ASSERT(you.religion < NUM_GODS);
@@ -2756,6 +2745,10 @@ static void _tag_read_you(reader &th)
 
     count = unmarshallByte(th);
     ASSERT(count == (int)you.ability_letter_table.size());
+#if TAG_MAJOR_VERSION == 34
+    bool found_fly = false;
+    bool found_stop_flying = false;
+#endif
     for (int i = 0; i < count; i++)
     {
         int a = unmarshallShort(th);
@@ -2779,12 +2772,20 @@ static void _tag_read_you(reader &th)
             || a == ABIL_WISP_BLINK // was ABIL_FLY_II
                && th.getMinorVersion() < TAG_MINOR_0_12)
         {
-            a = ABIL_NON_ABILITY;
+            if (found_fly)
+                a = ABIL_NON_ABILITY;
+            else
+                a = ABIL_FLY;
+            found_fly = true;
         }
         if (a == ABIL_EVOKE_STOP_LEVITATING
             || a == ABIL_STOP_FLYING)
         {
-            a = ABIL_NON_ABILITY;
+            if (found_stop_flying)
+                a = ABIL_NON_ABILITY;
+            else
+                a = ABIL_STOP_FLYING;
+            found_stop_flying = true;
         }
 
         if (th.getMinorVersion() < TAG_MINOR_NO_JUMP)
@@ -2848,15 +2849,6 @@ static void _tag_read_you(reader &th)
         }
         else
             you.training_targets[j] = 0;
-
-        if (th.getMinorVersion() >= TAG_MINOR_GOLDIFY_MANUALS)
-        {
-#endif
-            you.skill_manual_points[j] = unmarshallInt(th);
-#if TAG_MAJOR_VERSION == 34
-        }
-        else
-            you.skill_manual_points[j] = 0;
 #endif
     }
 
@@ -2872,15 +2864,12 @@ static void _tag_read_you(reader &th)
 
     you.skill_menu_do = static_cast<skill_menu_state>(unmarshallByte(th));
     you.skill_menu_view = static_cast<skill_menu_state>(unmarshallByte(th));
-#if TAG_MAJOR_VERSION == 34
-    if (you.skill_menu_view == SKM_VIEW_TRANSFER)
-        you.skill_menu_view = SKM_NONE;
-    // Was Ashenzari skill transfer information
-    // Four ints to discard
-    if (th.getMinorVersion() < TAG_MINOR_NEW_ASHENZARI)
-        for (int j = 0; j < 4; ++j)
-            unmarshallInt(th);
-#endif
+    you.transfer_from_skill = static_cast<skill_type>(unmarshallInt(th));
+    ASSERT(you.transfer_from_skill == SK_NONE || you.transfer_from_skill < NUM_SKILLS);
+    you.transfer_to_skill = static_cast<skill_type>(unmarshallInt(th));
+    ASSERT(you.transfer_to_skill == SK_NONE || you.transfer_to_skill < NUM_SKILLS);
+    you.transfer_skill_points = unmarshallInt(th);
+    you.transfer_total_skill_points = unmarshallInt(th);
 
     // Set up you.skill_cost_level.
     you.skill_cost_level = 0;
@@ -3130,11 +3119,28 @@ static void _tag_read_you(reader &th)
         you.innate_mutation[MUT_FAST_METABOLISM] -= 1;
     }
 
-    if (th.getMinorVersion() < TAG_MINOR_ROT_IMMUNITY
-                                        && you.species == SP_VINE_STALKER)
+    if (th.getMinorVersion() < TAG_MINOR_ROT_IMMUNITY)
     {
-        you.mutation[MUT_NO_POTION_HEAL] =
-                you.innate_mutation[MUT_NO_POTION_HEAL] = 3;
+        if (you.species == SP_VINE_STALKER)
+        {
+            you.mutation[MUT_NO_POTION_HEAL] =
+                    you.innate_mutation[MUT_NO_POTION_HEAL] = 3;
+            you.mutation[MUT_MIASMA_IMMUNITY] =
+                    you.innate_mutation[MUT_MIASMA_IMMUNITY] = 0;
+        }
+        else if (you.species == SP_GARGOYLE)
+        {
+            you.mutation[MUT_MIASMA_IMMUNITY] =
+                    you.innate_mutation[MUT_MIASMA_IMMUNITY] = 1;
+        }
+    }
+
+    if (th.getMinorVersion() < TAG_MINOR_FOUL_STENCH
+        && you.species == SP_DEMONSPAWN
+        && you.innate_mutation[MUT_SAPROVOROUS])
+    {
+        you.mutation[MUT_MIASMA_IMMUNITY] =
+                you.innate_mutation[MUT_MIASMA_IMMUNITY] = 1;
     }
 
     if (th.getMinorVersion() < TAG_MINOR_DS_CLOUD_MUTATIONS
@@ -3155,64 +3161,8 @@ static void _tag_read_you(reader &th)
     }
 
     // No minor version needed: all old felids should get MUT_PAWS.
-    if (you.species == SP_FELID)
-        _fixup_species_mutations(MUT_PAWS);
-
-    // TODO: can we just provide even more generic species mutation fixup code?
-    // (There's a lot of weird interactions and special cases to worry about..)
-    if (you.species == SP_FORMICID)
-        _fixup_species_mutations(MUT_QUADRUMANOUS);
-
-    if (you.species == SP_MUMMY)
-    {
-        _fixup_species_mutations(MUT_NO_DRINK);
-        // note that the following would not be reliable on a species that can
-        // mutate normally...
-        _fixup_species_mutations(MUT_HEAT_VULNERABILITY);
-    }
-
-    if (you.species == SP_MINOTAUR)
-        _fixup_species_mutations(MUT_REFLEXIVE_HEADBUTT);
-
-    if (you.species == SP_PALE_DRACONIAN)
-        _fixup_species_mutations(MUT_STEAM_RESISTANCE);
-
-    if (you.species == SP_GREY_DRACONIAN)
-        _fixup_species_mutations(MUT_UNBREATHING);
-
-    if (you.species == SP_FELID)
-    {
-        _fixup_species_mutations(MUT_NO_GRASPING);
-        _fixup_species_mutations(MUT_NO_ARMOUR);
-        _fixup_species_mutations(MUT_MULTILIVED);
-    }
-    // blanket fixup for this, just in case it is still lurking around on old
-    // characters
-    _fixup_species_mutations(MUT_FORLORN);
-
-    if (you.species == SP_NAGA)
-        _fixup_species_mutations(MUT_CONSTRICTING_TAIL);
-
-    if (you.species == SP_GNOLL)
-        _fixup_species_mutations(MUT_DISTRIBUTED_TRAINING);
-
-    if (you.species == SP_MERFOLK || you.species == SP_OCTOPODE)
-        _fixup_species_mutations(MUT_NIMBLE_SWIMMER);
-
-    if (you.species == SP_MERFOLK)
-        _fixup_species_mutations(MUT_MERTAIL);
-
-    if (you.species == SP_OCTOPODE)
-        _fixup_species_mutations(MUT_TENTACLE_ARMS);
-
-    if (you.species == SP_VAMPIRE)
-        _fixup_species_mutations(MUT_VAMPIRISM);
-
-    if (you.has_innate_mutation(MUT_TORMENT_RESISTANCE)
-        || you.species == SP_GARGOYLE)
-    {
-        _fixup_species_mutations(MUT_TORMENT_RESISTANCE);
-    }
+    if (you.species == SP_FELID && you.innate_mutation[MUT_PAWS] < 1)
+        you.mutation[MUT_PAWS] = you.innate_mutation[MUT_PAWS] = 1;
 
     if (th.getMinorVersion() < TAG_MINOR_SPIT_POISON
         && you.species == SP_NAGA)
@@ -3241,6 +3191,15 @@ static void _tag_read_you(reader &th)
     {
         if (you.mutation[MUT_MP_WANDS] > 1)
             you.mutation[MUT_MP_WANDS] = 1;
+    }
+
+    if (th.getMinorVersion() < TAG_MINOR_NAGA_METABOLISM)
+    {
+        if (you.species == SP_NAGA)
+        {
+            you.mutation[MUT_SLOW_METABOLISM] =
+                you.innate_mutation[MUT_SLOW_METABOLISM] = 1;
+        }
     }
 
     if (th.getMinorVersion() < TAG_MINOR_DETERIORATION)
@@ -3982,6 +3941,7 @@ static void _tag_read_you_items(reader &th)
             {
                 you.equip[i] = -1;
                 you.melded.set(i, false);
+                // XXX: need to update ash bondage, or is this too early?
                 continue;
             }
             // likewise the boots of the Assassin before it became a hat
@@ -4187,13 +4147,8 @@ static void _tag_read_you_items(reader &th)
         reset_training();
 
     // Move any books from inventory into the player's library.
-    // (Likewise for manuals.)
-    if (th.getMinorVersion() < TAG_MINOR_GOLDIFY_MANUALS)
+    if (th.getMinorVersion() < TAG_MINOR_GOLDIFY_BOOKS)
         add_held_books_to_library();
-
-    for (int i = 0; i < ENDOFPACK; ++i)
-        if (you.inv[i].defined())
-            god_id_item(you.inv[i], true);
 #endif
 }
 
@@ -4975,9 +4930,13 @@ void unmarshallItem(reader &th, item_def &item)
         }
 
         // Make sure no weird fake-rap combinations are produced by the upgrade
-        // from rings of sustenance with {Stlth} to stealth
-        if (item.base_type == OBJ_JEWELLERY && item.sub_type == RING_STEALTH)
+        // from rings of sustenance/hunger with {Stlth} to stealth/attention
+        if (item.base_type == OBJ_JEWELLERY
+            && (item.sub_type == RING_STEALTH
+                || item.sub_type == RING_ATTENTION))
+        {
             artefact_set_property(item, ARTP_STEALTH, 0);
+        }
     }
 
     if (th.getMinorVersion() < TAG_MINOR_NO_POT_FOOD)
@@ -5200,9 +5159,8 @@ void unmarshallItem(reader &th, item_def &item)
     if (item.base_type == OBJ_WANDS && item.charges < 0)
         item.charges = 0;
 
-    // Prevent weird states for saves between UNCURSE and NEW_ASHENZARI
-    if (th.getMinorVersion() < TAG_MINOR_NEW_ASHENZARI && item.cursed())
-        item.flags &= (~ISFLAG_CURSED);
+    if (item.base_type == OBJ_RODS && item.cursed())
+        do_uncurse_item(item); // rods can't be cursed anymore
 
     // turn old hides into the corresponding armour
     static const map<int, armour_type> hide_to_armour = {
@@ -7264,9 +7222,9 @@ void unmarshallSpells(reader &th, monster_spells &spells
 #if TAG_MAJOR_VERSION == 34
             if (th.getMinorVersion() < TAG_MINOR_DEMONIC_SPELLS)
             {
-                if (spells[j].flags & MON_SPELL_VOCAL)
+                if (spells[j].flags & MON_SPELL_DEMONIC)
                 {
-                    spells[j].flags &= ~MON_SPELL_VOCAL;
+                    spells[j].flags &= ~MON_SPELL_DEMONIC;
                     spells[j].flags |= MON_SPELL_MAGICAL;
                 }
             }

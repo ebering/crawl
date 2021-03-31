@@ -387,7 +387,6 @@ explorer.catalog_names =    {vaults    = "   Vaults: ",
 -- fairly subjective, some of these should probably be relative to depth
 explorer.dangerous_monsters = {
         "ancient lich",
-        "dread lich",
         "orb of fire",
         "royal mummy",
         "Hell Sentinel",

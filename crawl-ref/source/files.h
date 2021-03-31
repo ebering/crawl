@@ -90,7 +90,6 @@ bool pregen_dungeon(const level_id &stopping_point);
 bool load_level(dungeon_feature_type stair_taken, load_mode_type load_mode,
                 const level_id& old_level);
 void delete_level(const level_id &level);
-void save_level(const level_id& lid);
 
 void save_game(bool leave_game, const char *bye = nullptr);
 

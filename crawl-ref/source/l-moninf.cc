@@ -82,7 +82,7 @@ MIRET1(boolean, is_firewood, is(MB_FIREWOOD))
  * - 1 neutral
  * - 2 strict neutral (neutral but won't attack the player)
  * - 3 good neutral (neutral but won't attack friendlies)
- * - 4 friendly (created friendly, not charmed)
+ * - 4 friendly (created friendly, not enslavement)
  *
  * @treturn int
  * @function attitude
@@ -428,8 +428,8 @@ LUAFN(moninf_get_is)
     return 1;
 }
 
-/*** Get the monster's spells.
- * Returns a the monster's spellbook. The spellbook is given
+/*** Get the monster's possible spells.
+ * Returns a list of the monster's possible spellbooks. Each spellbook is given
  * as a list of spell names.
  * @treturn array
  * @function spells
@@ -443,14 +443,20 @@ LUAFN(moninf_get_spells)
     if (!mi->has_spells())
         return 1;
 
-    const vector<mon_spell_slot> &unique_slots = get_unique_spells(*mi);
-    vector<string> spell_titles;
+    unique_books books = get_unique_spells(*mi);
+    const size_t num_books = books.size();
 
-    for (const auto& slot : unique_slots)
-        spell_titles.emplace_back(spell_title(slot.spell));
+    for (size_t i = 0; i < num_books; ++i)
+    {
+        const vector<mon_spell_slot> &unique_slots = books[i];
+        vector<string> spell_titles;
 
-    clua_stringtable(ls, spell_titles);
-    lua_rawseti(ls, -2, 1);
+        for (const auto& slot : unique_slots)
+            spell_titles.emplace_back(spell_title(slot.spell));
+
+        clua_stringtable(ls, spell_titles);
+        lua_rawseti(ls, -2, i+1);
+    }
 
     return 1;
 }
@@ -563,10 +569,10 @@ LUAFN(moninf_get_can_be_constricted)
     MONINF(ls, 1, mi);
     if (!mi->constrictor_name.empty()
         || !form_keeps_mutations()
-        || (you.get_mutation_level(MUT_CONSTRICTING_TAIL) < 2
-                || you.is_constricting())
-            && (you.has_mutation(MUT_TENTACLE_ARMS)
-                || !you.has_usable_tentacle()))
+        || (you.species != SP_NAGA
+            || you.experience_level <= 12
+            || you.is_constricting())
+         && (you.species != SP_OCTOPODE || !you.has_usable_tentacle()))
     {
         lua_pushboolean(ls, false);
     }

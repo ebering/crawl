@@ -60,9 +60,9 @@ static const vector<spell_type> spellbook_templates[] =
 {   // Book of Ice
     SPELL_ICE_FORM,
     SPELL_ENGLACIATION,
+    SPELL_OZOCUBUS_REFRIGERATION,
     SPELL_FREEZING_CLOUD,
     SPELL_SIMULACRUM,
-    SPELL_OZOCUBUS_REFRIGERATION,
 },
 
 {   // Book of Spatial Translocations
@@ -70,7 +70,7 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_BECKONING,
     SPELL_GRAVITAS,
     SPELL_TELEPORT_OTHER,
-    SPELL_MANIFOLD_ASSAULT,
+    SPELL_GOLUBRIAS_PASSAGE,
 },
 
 {   // Book of Hexes
@@ -117,13 +117,13 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_WEREBLOOD,
     SPELL_SPIDER_FORM,
     SPELL_ICE_FORM,
-    SPELL_HYDRA_FORM,
+    SPELL_BLADE_HANDS,
 },
 
 {   // Book of Transfigurations
     SPELL_IRRADIATE,
     SPELL_STATUE_FORM,
-    SPELL_BLADE_HANDS,
+    SPELL_HYDRA_FORM,
     SPELL_DRAGON_FORM,
 },
 
@@ -131,8 +131,8 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_CORPSE_ROT,
     SPELL_STONE_ARROW,
     SPELL_SUMMON_FOREST,
-    SPELL_HYDRA_FORM,
     SPELL_NOXIOUS_BOG,
+    SPELL_HYDRA_FORM,
     SPELL_SUMMON_HYDRA,
 },
 
@@ -186,8 +186,6 @@ static const vector<spell_type> spellbook_templates[] =
 {   // Book of the Warp
     SPELL_GRAVITAS,
     SPELL_PORTAL_PROJECTILE,
-    SPELL_GOLUBRIAS_PASSAGE,
-    SPELL_MANIFOLD_ASSAULT,
     SPELL_DISPERSAL,
     SPELL_DISJUNCTION,
 },
@@ -227,7 +225,6 @@ static const vector<spell_type> spellbook_templates[] =
 },
 
 {   // Book of Earth
-    SPELL_ANIMATE_ARMOUR,
     SPELL_LEDAS_LIQUEFACTION,
     SPELL_BOLT_OF_MAGMA,
     SPELL_STATUE_FORM,
@@ -300,7 +297,6 @@ static const vector<spell_type> spellbook_templates[] =
 
 {   // Book of Dreams
     SPELL_HIBERNATION,
-    SPELL_ANIMATE_ARMOUR,
     SPELL_BORGNJORS_VILE_CLUTCH,
     SPELL_SILENCE,
     SPELL_SHADOW_CREATURES,

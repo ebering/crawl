@@ -59,16 +59,6 @@ Xom grants you some temporary aid.
 
 Xom momentarily opens a gate.
 %%%%
-Xom animate monster weapon
-
-"Time to have some fun!"
-
-You hear Xom's maniacal laughter.
-
-Xom grants you a minor favour.
-
-Xom smiles on you.
-%%%%
 # changing the scenery
 Xom scenery
 
@@ -140,6 +130,10 @@ Xom hostile monster
 "Let's see if it's strong enough to survive yet."
 
 You hear Xom's maniacal laughter.
+%%%%
+Xom animate monster weapon
+
+@Xom hostile monster@
 %%%%
 Xom banishment
 
@@ -537,9 +531,6 @@ Hepliaklqana says: Your past becomes your present!
 Jiyva welcome
 
 Slime for the Slime God!
-
-w:1
-Long live the new flesh!
 %%%%
 Kikubaaqudgha welcome
 

@@ -31,13 +31,11 @@
 #include "output.h"
 #include "prompt.h"
 #include "religion.h"
-#include "skills.h"
 #include "spl-book.h"
 #include "spl-clouds.h"
 #include "spl-damage.h"
 #include "spl-other.h"
 #include "spl-summoning.h"
-#include "spl-transloc.h"
 #include "spl-util.h"
 #include "spl-zap.h"
 #include "stringutil.h"
@@ -407,8 +405,7 @@ bool del_spell_from_memory(spell_type spell)
 bool spell_is_direct_explosion(spell_type spell)
 {
     return spell == SPELL_FIRE_STORM || spell == SPELL_CALL_DOWN_DAMNATION
-           || spell == SPELL_GHOSTLY_SACRIFICE || spell == SPELL_UPHEAVAL
-           || spell == SPELL_ERUPTION;
+           || spell == SPELL_GHOSTLY_SACRIFICE || spell == SPELL_UPHEAVAL;
 }
 
 bool spell_harms_target(spell_type spell)
@@ -488,7 +485,6 @@ bool spell_is_direct_attack(spell_type spell)
         || spell == SPELL_IGNITION
         || spell == SPELL_STARBURST
         || spell == SPELL_HAILSTORM
-        || spell == SPELL_MANIFOLD_ASSAULT
         || spell == SPELL_ABSOLUTE_ZERO) // n.b. not an area spell
     {
         return true;
@@ -1123,9 +1119,9 @@ bool casting_is_useless(spell_type spell, bool temp)
 }
 
 /**
- * Casting-specific checks that are involved when casting any spell or larger
- * groups of spells (e.g. entire schools). Includes MP (which does use the
- * spell level if provided), confusion state, banned schools.
+ * Casting-specific checks that are involved when casting any spell. Includes
+ * MP (which does use the spell level if provided), confusion state, banned
+ * schools.
  *
  * @param spell      The spell in question.
  * @param temp       Include checks for volatile or temporary states
@@ -1139,57 +1135,13 @@ string casting_uselessness_reason(spell_type spell, bool temp)
         if (you.duration[DUR_CONF] > 0)
             return "you're too confused to cast spells.";
 
-        if (spell_difficulty(spell) > you.experience_level)
-            return "you aren't experienced enough to cast this spell.";
-
-        if (you.has_mutation(MUT_HP_CASTING))
-        {
-            // TODO: deduplicate with enough_hp()
-            if (you.duration[DUR_DEATHS_DOOR])
-                return "you cannot pay life while functionally dead.";
-            if (!enough_hp(spell_mana(spell), true, false))
-                return "you don't have enough health to cast this spell.";
-        }
-        else if (!enough_mp(spell_mana(spell), true, false))
-            return "you don't have enough magic to cast this spell.";
-
-        if (spell == SPELL_SUBLIMATION_OF_BLOOD
-            && you.magic_points == you.max_magic_points)
-        {
-            if (you.has_mutation(MUT_HP_CASTING))
-                return "your magic and health are inextricable.";
-            return "your reserves of magic are already full.";
-        }
+        if (!enough_mp(spell_mana(spell), true, false))
+            return "you don't have enough magic to cast that spell.";
     }
 
     // Check for banned schools (Currently just Ru sacrifices)
     if (cannot_use_schools(get_spell_disciplines(spell)))
         return "you cannot use spells of this school.";
-
-    // TODO: these checks were in separate places, but is this already covered
-    // by cannot_use_schools?
-    if (get_spell_disciplines(spell) & spschool::summoning
-        && you.get_mutation_level(MUT_NO_LOVE))
-    {
-        return "you cannot coerce anything to answer your summons.";
-    }
-
-    // other Ru spells not affected by the school checks
-    switch (spell)
-    {
-    case SPELL_ANIMATE_DEAD:
-    case SPELL_ANIMATE_SKELETON:
-    case SPELL_DEATH_CHANNEL:
-    case SPELL_SIMULACRUM:
-    case SPELL_INFESTATION:
-    case SPELL_TUKIMAS_DANCE:
-        if (you.get_mutation_level(MUT_NO_LOVE))
-            return "you cannot coerce anything to obey you.";
-        break;
-    default:
-        break;
-    }
-
 
     return "";
 }
@@ -1251,12 +1203,29 @@ string spell_uselessness_reason(spell_type spell, bool temp, bool prevent,
     if (!prevent && temp && spell_no_hostile_in_range(spell))
         return "you can't see any hostile targets that would be affected.";
 
+    // other Ru spells not affected by the school check; handle these separately
+    // since they may have other constraints
+    switch (spell)
+    {
+    case SPELL_ANIMATE_DEAD:
+    case SPELL_ANIMATE_SKELETON:
+    case SPELL_DEATH_CHANNEL:
+    case SPELL_SIMULACRUM:
+    case SPELL_INFESTATION:
+    case SPELL_TUKIMAS_DANCE:
+        if (you.get_mutation_level(MUT_NO_LOVE))
+            return "you cannot coerce anything to obey you.";
+        break;
+    default:
+        break;
+    }
+
     switch (spell)
     {
     case SPELL_BLINK:
         // XXX: this is a little redundant with you_no_tele_reason()
         // but trying to sort out temp and so on is a mess
-        if (you.stasis())
+        if (you.species == SP_FORMICID)
             return "your stasis prevents you from teleporting.";
 
         if (temp && you.no_tele(false, false, true))
@@ -1264,7 +1233,7 @@ string spell_uselessness_reason(spell_type spell, bool temp, bool prevent,
         break;
 
     case SPELL_SWIFTNESS:
-        if (you.stasis())
+        if (you.species == SP_FORMICID)
             return "your stasis precludes magical swiftness.";
 
         if (temp)
@@ -1301,8 +1270,6 @@ string spell_uselessness_reason(spell_type spell, bool temp, bool prevent,
         break;
 
     case SPELL_EXCRUCIATING_WOUNDS:
-        if (is_useless_skill(SK_NECROMANCY))
-            return "you lack the necromantic skill to inflict true pain.";
         if (temp
             && (!you.weapon()
                 || you.weapon()->base_type != OBJ_WEAPONS
@@ -1310,11 +1277,12 @@ string spell_uselessness_reason(spell_type spell, bool temp, bool prevent,
         {
             return "you aren't wielding a brandable weapon.";
         }
-        // intentional fallthrough to portal projectile
+        // intentional fallthrough
     case SPELL_PORTAL_PROJECTILE:
-        if (you.has_mutation(MUT_NO_GRASPING))
+        if (you.species == SP_FELID)
             return "this spell is useless without hands.";
         break;
+
     case SPELL_LEDAS_LIQUEFACTION:
         if (temp && you.duration[DUR_LIQUEFYING])
             return "you need to wait for the ground to become solid again.";
@@ -1352,8 +1320,16 @@ string spell_uselessness_reason(spell_type spell, bool temp, bool prevent,
         break;
 
     case SPELL_SUBLIMATION_OF_BLOOD:
-        if (!you.can_bleed(temp))
+        // XXX: write player_can_bleed(bool temp) & use that
+        if (you.species == SP_GARGOYLE
+            || you.species == SP_GHOUL
+            || you.species == SP_MUMMY
+            || (temp && !form_can_bleed(you.form)))
+        {
             return "you have no blood to sublime.";
+        }
+        if (you.magic_points == you.max_magic_points && temp)
+            return "your reserves of magic are already full.";
         break;
 
     case SPELL_TORNADO:
@@ -1452,26 +1428,14 @@ string spell_uselessness_reason(spell_type spell, bool temp, bool prevent,
             return "you cannot sustain more bogs right now.";
         break;
 
-    case SPELL_ANIMATE_ARMOUR:
-        if (you_can_wear(EQ_BODY_ARMOUR, temp) == MB_FALSE)
-            return "you cannot wear body armour.";
-        if (temp && !you.slot_item(EQ_BODY_ARMOUR))
-            return "you have no body armour to summon the spirit of.";
-        break;
-
-    case SPELL_MANIFOLD_ASSAULT:
-    {
-        if (temp)
-        {
-            const string unproj_reason = weapon_unprojectability_reason();
-            if (unproj_reason != "")
-                return unproj_reason;
-        }
-    }
-        break;
-
     default:
         break;
+    }
+
+    if (get_spell_disciplines(spell) & spschool::summoning
+        && you.get_mutation_level(MUT_NO_LOVE))
+    {
+        return "you cannot coerce anything to answer your summons.";
     }
 
     return "";
@@ -1589,9 +1553,6 @@ bool spell_no_hostile_in_range(spell_type spell)
 
      case SPELL_INTOXICATE:
          return cast_intoxicate(-1, false, true) == spret::abort;
-
-    case SPELL_MANIFOLD_ASSAULT:
-         return cast_manifold_assault(-1, false, false) == spret::abort;
 
     default:
         break;
@@ -1870,7 +1831,6 @@ const set<spell_type> removed_spells =
     SPELL_DARKNESS,
     SPELL_CLOUD_CONE,
     SPELL_RING_OF_THUNDER,
-    SPELL_TWISTED_RESURRECTION
 #endif
 };
 

@@ -117,9 +117,9 @@ void wizard_change_species()
         return;
     }
 
-    const species_type sp = species::from_str_loose(specs);
+    const species_type sp = find_species_from_string(specs);
 
-    // Means from_str_loose couldn't interpret `specs`.
+    // Means find_species_from_string couldn't interpret `specs`.
     if (sp == SP_UNKNOWN)
     {
         mpr("That species isn't available.");
@@ -822,20 +822,14 @@ void wizard_get_god_gift()
         return;
     }
 
-    if (you_worship(GOD_ASHENZARI))
-    {
-        ashenzari_offer_new_curse();
-        return;
-    }
-
     if (!do_god_gift(true))
         mpr("Nothing happens.");
 }
 
 void wizard_toggle_xray_vision()
 {
-    you.wizard_vision = !you.wizard_vision;
-    mprf("X-ray vision %s.", you.wizard_vision ? "enabled" : "disabled");
+    you.xray_vision = !you.xray_vision;
+    mprf("X-ray vision %s.", you.xray_vision ? "enabled" : "disabled");
     viewwindow(true);
     update_screen();
 }
@@ -936,9 +930,9 @@ void wizard_transform()
 
 void wizard_join_religion()
 {
-    if (you.has_mutation(MUT_FORLORN))
+    if (you.species == SP_DEMIGOD)
     {
-        mpr("Not even in wizmode may divine creatures worship a god!");
+        mpr("Not even in wizmode may Demigods worship a god!");
         return;
     }
     god_type god = choose_god();

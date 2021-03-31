@@ -110,7 +110,10 @@ static void _set_tornado_durations()
     int dur = 60;
     you.duration[DUR_TORNADO] = dur;
     if (!get_form()->forbids_flight())
+    {
         you.duration[DUR_FLIGHT] = max(dur, you.duration[DUR_FLIGHT]);
+        you.attribute[ATTR_FLIGHT_UNCANCELLABLE] = 1;
+    }
 }
 
 spret cast_tornado(int /*powc*/, bool fail)
@@ -135,7 +138,7 @@ spret cast_tornado(int /*powc*/, bool fail)
 
     you.props["tornado_since"].get_int() = you.elapsed_time;
     _set_tornado_durations();
-    if (you.has_mutation(MUT_TENGU_FLIGHT))
+    if (you.species == SP_TENGU)
         you.redraw_evasion = true;
 
     return spret::success;
@@ -364,6 +367,7 @@ void tornado_damage(actor *caster, int dur, bool is_vortex)
                         bool standing = !you.airborne();
                         if (standing)
                             mpr("The vortex of raging winds lifts you up.");
+                        you.attribute[ATTR_FLIGHT_UNCANCELLABLE] = 1;
                         you.duration[DUR_FLIGHT]
                             = max(you.duration[DUR_FLIGHT], 20);
                         if (standing)
@@ -485,7 +489,8 @@ void cancel_tornado(bool tloc)
             // Tornado ended by using something stairslike, so the destination
             // is safe
             you.duration[DUR_FLIGHT] = 0;
-            if (you.has_mutation(MUT_TENGU_FLIGHT))
+            you.attribute[ATTR_FLIGHT_UNCANCELLABLE] = 0;
+            if (you.species == SP_TENGU)
                 you.redraw_evasion = true;
         }
     }

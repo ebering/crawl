@@ -13,7 +13,6 @@
 #include "movement.h"
 
 #include "abyss.h"
-#include "art-enum.h"
 #include "bloodspatter.h"
 #include "cloud.h"
 #include "coord.h"
@@ -210,10 +209,9 @@ static bool _cancel_ice_move()
     return false;
 }
 
-bool cancel_harmful_move(bool physically, bool rampaging)
+bool cancel_harmful_move(bool rampaging)
 {
-    return physically ? (_cancel_barbed_move(rampaging) || _cancel_ice_move())
-        : _cancel_ice_move();
+    return _cancel_barbed_move(rampaging) || _cancel_ice_move();
 }
 
 void remove_ice_movement()
@@ -230,21 +228,16 @@ void remove_ice_movement()
     {
         you.duration[DUR_FROZEN_RAMPARTS] = 0;
         end_frozen_ramparts();
-        mprf(MSGCH_DURATION, "The frozen ramparts melt away as you move.");
+        mpr("The frozen ramparts melt away as you move.");
     }
-}
-
-string water_hold_substance()
-{
-    return you.props["water_hold_substance"].get_string();
 }
 
 void remove_water_hold()
 {
     if (you.duration[DUR_WATER_HOLD])
     {
-        mprf("You slip free of the %s engulfing you.",
-             water_hold_substance().c_str());
+        mpr("You slip free of the water engulfing you.");
+        you.props.erase("water_holder");
         you.clear_far_engulf();
     }
 }
@@ -618,20 +611,20 @@ static spret _rampage_forward(coord_def move)
         if (!you.see_cell_no_trans(p))
             return spret::fail;
 
+        // Don't rampage if our tracer path is broken by something we can't
+        // safely pass through before it reaches a monster.
+        if (!you.can_pass_through(p) || is_feat_dangerous(env.grid(p)))
+            return spret::fail;
+
         const monster* mon = monster_at(p);
-        // Check for a plausible target at this cell.
-        // If there's no monster, a Fedhas ally, or an invis monster,
-        // perform terrain checks and if they pass keep going.
-        if (!mon
-            || fedhas_passthrough(mon)
-            || !you.can_see(*mon))
-        {
-            // Don't rampage if our tracer path is broken by something we can't
-            // safely pass through before it reaches a monster.
-            if (!you.can_pass_through(p) || is_feat_dangerous(env.grid(p)))
-                return spret::fail;
+        if (!mon)
             continue;
-        }
+        // Allow our tracer to passthrough Fedhas allies.
+        else if (mon && fedhas_passthrough(mon))
+            continue;
+        // Don't rampage at invis mons, but allow the tracer to keep going.
+        else if (mon && !you.can_see(*mon))
+            continue;
         // Don't rampage if the closest mons is non-hostile or a (non-Fedhas) plant.
         else if (mon && (mon->friendly()
                          || mon->neutral()
@@ -640,7 +633,6 @@ static spret _rampage_forward(coord_def move)
             return spret::fail;
         }
         // Okay, the first mons along the tracer is a valid target.
-        // Don't need terrain checks because we'll attack the mons.
         else if (mon)
         {
             valid_target = mon;
@@ -898,12 +890,12 @@ void move_player_action(coord_def move)
         return;
     }
 
-    // XX generalize?
     const string walkverb = you.airborne()                     ? "fly"
                           : you.swimming()                     ? "swim"
                           : you.form == transformation::spider ? "crawl"
-                          : you.form != transformation::none   ? "walk" // XX
-                          : lowercase_first(species::walking_verb(you.species));
+                          : (you.species == SP_NAGA
+                             && form_keeps_mutations())        ? "slither"
+                                                               : "walk";
 
     monster* targ_monst = monster_at(targ);
     if (fedhas_passthrough(targ_monst) && !you.is_stationary())
@@ -1189,8 +1181,8 @@ void move_player_action(coord_def move)
 
     if (!attacking
         && you_worship(GOD_CHEIBRIADOS)
-        && ((one_chance_in(10) && player_equip_unrand(UNRAND_LIGHTNING_SCALES))
-             || (coinflip() && rampaged)))
+        && ((one_chance_in(10) && you.run())
+             || (one_chance_in(2) && rampaged)))
     {
         did_god_conduct(DID_HASTY, 1, true);
     }

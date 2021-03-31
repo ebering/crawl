@@ -18,9 +18,9 @@ enum ability_type
     ABIL_BREATHE_STEAM,
     ABIL_BREATHE_MEPHITIC,
     ABIL_BREATHE_ACID,
+    ABIL_BLINK,
     // Others
 #if TAG_MAJOR_VERSION == 34
-    ABIL_BLINK,
     ABIL_DELAYED_FIREBALL,
 #endif
     // Abort duration-based spells
@@ -33,10 +33,13 @@ enum ability_type
     // Species-specific abilities.
     // Demonspawn-only
     ABIL_DAMNATION,
-#if TAG_MAJOR_VERSION == 34
+    // Tengu, Draconians
     ABIL_FLY,
+#if TAG_MAJOR_VERSION == 34
     ABIL_WISP_BLINK,
+#endif
     ABIL_STOP_FLYING,
+#if TAG_MAJOR_VERSION == 34
     ABIL_MUMMY_RESTORATION,
 #endif
     // Vampires
@@ -66,8 +69,8 @@ enum ability_type
     ABIL_EVOKE_BLINK,
     ABIL_EVOKE_TURN_INVISIBLE,
     ABIL_EVOKE_TURN_VISIBLE,
-#if TAG_MAJOR_VERSION == 34
     ABIL_EVOKE_FLIGHT,
+#if TAG_MAJOR_VERSION == 34
     ABIL_EVOKE_STOP_LEVITATING,
     ABIL_EVOKE_FOG,
     ABIL_EVOKE_TELEPORT_CONTROL,
@@ -183,15 +186,10 @@ enum ability_type
     ABIL_CHEIBRIADOS_SLOUCH,
     ABIL_CHEIBRIADOS_DISTORTION,
     // Ashenzari
-#if TAG_MAJOR_VERSION == 34
     ABIL_ASHENZARI_SCRYING = 1160,
     ABIL_ASHENZARI_TRANSFER_KNOWLEDGE,
     ABIL_ASHENZARI_END_TRANSFER,
     ABIL_ASHENZARI_CURSE,
-#else
-    ABIL_ASHENZARI_CURSE = 1160,
-#endif
-    ABIL_ASHENZARI_UNCURSE,
     // Dithmenos
     ABIL_DITHMENOS_SHADOW_STEP = 1170,
     ABIL_DITHMENOS_SHADOW_FORM,

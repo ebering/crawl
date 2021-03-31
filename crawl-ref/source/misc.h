@@ -14,6 +14,8 @@
 
 using std::vector;
 
+string weird_glowing_colour();
+
 void swap_with_monster(monster *mon_to_swap);
 
 void handle_real_time(chrono::time_point<chrono::system_clock> when

@@ -19,6 +19,7 @@
 #include "caction-type.h"
 #include "daction-type.h"
 #include "duration-type.h"
+#include "eq-type.h"
 #include "equipment-type.h"
 #include "flush-reason-type.h"
 #include "game-chapter.h"
@@ -63,7 +64,7 @@
 /// Maximum stat value
 static const int MAX_STAT_VALUE = 125;
 /// The standard unit of regen; one level in artifact inscriptions
-static const int REGEN_PIP = 100;
+static const int REGEN_PIP = 40;
 /// The standard unit of WL; one level in %/@ screens
 static const int WL_PIP = 40;
 /// The standard unit of stealth; one level in %/@ screens
@@ -219,10 +220,6 @@ public:
     FixedVector<unsigned int, NUM_SKILLS> ct_skill_points;
     FixedVector<uint8_t, NUM_SKILLS>  skill_order;
 
-    /// manuals
-    FixedVector<unsigned int, NUM_SKILLS>  skill_manual_points;
-
-
     bool auto_training;
     list<skill_type> exercises;     ///< recent practise events
     list<skill_type> exercises_all; ///< also include events for disabled skills
@@ -232,6 +229,12 @@ public:
     // Skill menu states
     skill_menu_state skill_menu_do;
     skill_menu_state skill_menu_view;
+
+    //Ashenzari transfer knowledge
+    skill_type    transfer_from_skill;
+    skill_type    transfer_to_skill;
+    unsigned int  transfer_skill_points;
+    unsigned int  transfer_total_skill_points;
 
     int  skill_cost_level;
     int  exp_available; // xp pool, scaled by 10 from you.experience
@@ -394,7 +397,9 @@ public:
 
     chrono::time_point<chrono::system_clock> last_keypress_time;
 
-    bool wizard_vision;
+    bool xray_vision;
+    int8_t bondage_level;  // how much an Ash worshipper is into bondage
+    int8_t bondage[NUM_ET];
     map<skill_type, int8_t> skill_boost; // Skill bonuses.
     bool digging;
 
@@ -415,9 +420,6 @@ public:
 
     // If true, player has triggered a trap effect by exploring.
     bool trapped;
-
-    // Did the player trigger their spectral weapon this turn?
-    bool triggered_spectral;
 
     // TODO burn this API with fire
     bool wield_change;          // redraw weapon
@@ -603,7 +605,6 @@ public:
     bool        extra_balanced() const override;
     bool        shove(const char* feat_name = "") override;
     bool        can_pass_through_feat(dungeon_feature_type grid) const override;
-    bool        can_burrow() const override;
     bool        is_habitable_feat(dungeon_feature_type actual_grid) const
         override;
     size_type   body_size(size_part_type psize = PSIZE_TORSO,
@@ -624,7 +625,8 @@ public:
     bool      has_usable_hooves(bool allow_tran = true) const;
     int       has_fangs(bool allow_tran = true) const;
     int       has_usable_fangs(bool allow_tran = true) const;
-    bool      has_tail(bool allow_tran = true) const;
+    int       has_tail(bool allow_tran = true) const;
+    int       has_usable_tail(bool allow_tran = true) const;
     bool      has_usable_offhand() const;
     int       has_pseudopods(bool allow_tran = true) const;
     int       has_usable_pseudopods(bool allow_tran = true) const;
@@ -679,13 +681,11 @@ public:
                 bool force_article = false) const override;
     string pronoun(pronoun_type pro, bool force_visible = false) const override;
     string conj_verb(const string &verb) const override;
-    string base_hand_name(bool plural, bool temp, bool *can_plural=nullptr) const;
     string hand_name(bool plural, bool *can_plural = nullptr) const override;
     string hands_verb(const string &plural_verb) const;
     string hands_act(const string &plural_verb, const string &object) const;
     string foot_name(bool plural, bool *can_plural = nullptr) const override;
     string arm_name(bool plural, bool *can_plural = nullptr) const override;
-    int arm_count() const;
     string unarmed_attack_name() const;
 
     bool fumbles_attack() override;
@@ -703,7 +703,6 @@ public:
     bool is_lifeless_undead(bool temp = true) const;
     bool can_polymorph() const override;
     bool can_bleed(bool allow_tran = true) const override;
-    bool can_drink(bool temp = true) const;
     bool is_stationary() const override;
     bool malmutate(const string &reason) override;
     bool polymorph(int pow, bool allow_immobile = true) override;
@@ -750,7 +749,7 @@ public:
     monster_type mons_species(bool zombie_base = false) const override;
 
     mon_holy_type holiness(bool temp = true) const override;
-    bool undead_or_demonic(bool temp = true) const override;
+    bool undead_or_demonic() const override;
     bool is_holy() const override;
     bool is_nonliving(bool temp = true) const override;
     int how_chaotic(bool check_spells_god) const override;
@@ -786,10 +785,10 @@ public:
     bool cloud_immune(bool calc_unid = true, bool items = true) const override;
 
     bool airborne() const override;
-    bool permanent_flight(bool include_equip=true) const;
+    bool cancellable_flight() const;
+    bool permanent_flight() const;
     bool racial_permanent_flight() const;
     int get_noise_perception(bool adjusted = true) const;
-    bool is_dragonkind() const override;
 
     bool paralysed() const override;
     bool cannot_move() const override;
@@ -904,7 +903,7 @@ public:
 
     bool form_uses_xl() const;
 
-    bool clear_far_engulf(bool force = false) override;
+    bool clear_far_engulf() override;
 
     int armour_class_with_one_sub(item_def sub) const;
 
@@ -1073,20 +1072,14 @@ bool enough_hp(int minimum, bool suppress_msg, bool abort_macros = true);
 bool enough_mp(int minimum, bool suppress_msg, bool abort_macros = true);
 
 void calc_hp(bool scale = false, bool set = false);
-void calc_mp(bool scale = false);
+void calc_mp();
 
 void dec_hp(int hp_loss, bool fatal, const char *aux = nullptr);
-void drain_mp(int mp_loss);
-void pay_hp(int cost);
-void pay_mp(int cost);
+void dec_mp(int mp_loss, bool silent = false);
 
 void inc_mp(int mp_gain, bool silent = false);
-void inc_hp(int hp_gain, bool silent = false);
-void refund_mp(int cost);
-void refund_hp(int cost);
+void inc_hp(int hp_gain);
 void flush_mp();
-void flush_hp();
-void finalize_mp_cost(bool addl_hp_cost = false);
 
 void drain_hp(int hp_loss);
 // Undrain the player's HP and return excess HP if any.
@@ -1110,6 +1103,7 @@ bool sanguine_armour_valid();
 void activate_sanguine_armour();
 
 void refresh_weapon_protection();
+void handle_spectral_brand();
 
 void set_mp(int new_amount);
 

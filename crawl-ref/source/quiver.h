@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "ability-type.h"
-#include "command-type.h"
 #include "format.h"
 #include "spell-type.h"
 #include "tiles.h" // for tile_def
@@ -38,7 +37,7 @@ namespace quiver
     struct action : public enable_shared_from_this<action>
     {
         action()
-            : target(), default_fire_context(nullptr)
+            : target(), error(), default_fire_context(nullptr)
         { };
         virtual ~action() = default;
         void reset();
@@ -110,6 +109,7 @@ namespace quiver
         }
 
         dist target;
+        string error;
         const action_cycler *default_fire_context;
     };
 
@@ -123,8 +123,6 @@ namespace quiver
     shared_ptr<action> get_primary_action();
     shared_ptr<action> get_secondary_action();
     void set_needs_redraw();
-
-    int menu_size();
 
     // this is roughly a custom not_null wrapper on shared_ptr<action>
     struct action_cycler
@@ -147,14 +145,13 @@ namespace quiver
         bool set_from_slot(int slot);
         bool cycle(int dir = 0, bool allow_disabled=true);
         bool clear();
-        void on_actions_changed(bool check_autoswitch=false);
+        void on_actions_changed();
         virtual void set_needs_redraw();
         shared_ptr<action> find_last_valid();
 
         void target();
         shared_ptr<action> do_target();
-        virtual string fire_key_hints() const;
-        virtual bool targeter_handles_key(command_type c) const;
+        string fire_key_hints() const;
 
         bool autoswitched;
     protected:
@@ -178,7 +175,7 @@ namespace quiver
     };
 
     void choose(action_cycler &cur_quiver, bool allow_empty=true);
-    void on_actions_changed(bool check_autoswitch=false);
+    void on_actions_changed();
     void on_weapon_changed();
 
     // TODO: perhaps this should be rolled into action_cycler?

@@ -139,9 +139,9 @@ tileidx_t tileidx_shop(const shop_struct *shop)
             return TILE_SHOP_ARMOUR;
         case SHOP_JEWELLERY:
             return TILE_SHOP_JEWELLERY;
-#if TAG_MAJOR_VERSION == 34
         case SHOP_EVOKABLES:
             return TILE_SHOP_GADGETS;
+#if TAG_MAJOR_VERSION == 34
         case SHOP_FOOD:
             return TILE_SHOP_FOOD;
 #endif
@@ -3400,10 +3400,8 @@ tileidx_t tileidx_ability(const ability_type ability)
         return TILEG_ABILITY_BREATHE_MEPHITIC;
     case ABIL_BREATHE_ACID:
         return TILEG_ABILITY_BREATHE_ACID;
-#if TAG_MAJOR_VERSION == 34
     case ABIL_BLINK:
         return TILEG_ABILITY_BLINK;
-#endif
     case ABIL_HOP:
         return TILEG_ABILITY_HOP;
     case ABIL_ROLLING_CHARGE:
@@ -3421,6 +3419,11 @@ tileidx_t tileidx_ability(const ability_type ability)
     // Demonspawn-only
     case ABIL_DAMNATION:
         return TILEG_ABILITY_HURL_DAMNATION;
+    // Tengu, Draconians
+    case ABIL_FLY:
+        return TILEG_ABILITY_FLIGHT;
+    case ABIL_STOP_FLYING:
+        return TILEG_ABILITY_FLIGHT_END;
     // Vampires
     case ABIL_TRAN_BAT:
         return TILEG_ABILITY_BAT_FORM;
@@ -3446,6 +3449,8 @@ tileidx_t tileidx_ability(const ability_type ability)
         return TILEG_ABILITY_EVOKE_INVISIBILITY;
     case ABIL_EVOKE_TURN_VISIBLE:
         return TILEG_ABILITY_EVOKE_INVISIBILITY_END;
+    case ABIL_EVOKE_FLIGHT:
+        return TILEG_ABILITY_EVOKE_FLIGHT;
     case ABIL_EVOKE_THUNDER:
         return TILEG_ABILITY_EVOKE_THUNDER;
 
@@ -3603,6 +3608,12 @@ tileidx_t tileidx_ability(const ability_type ability)
     // Ashenzari
     case ABIL_ASHENZARI_CURSE:
         return TILEG_ABILITY_ASHENZARI_CURSE;
+    case ABIL_ASHENZARI_SCRYING:
+        return TILEG_ABILITY_ASHENZARI_SCRY;
+    case ABIL_ASHENZARI_TRANSFER_KNOWLEDGE:
+        return TILEG_ABILITY_ASHENZARI_TRANSFER_KNOWLEDGE;
+    case ABIL_ASHENZARI_END_TRANSFER:
+        return TILEG_ABILITY_ASHENZARI_TRANSFER_KNOWLEDGE_END;
     // Dithmenos
     case ABIL_DITHMENOS_SHADOW_STEP:
         return TILEG_ABILITY_DITHMENOS_SHADOW_STEP;
@@ -3853,6 +3864,8 @@ static tileidx_t _tileidx_player_species_base(const species_type species)
             return TILEG_SP_HUMAN;
         case SP_DEEP_ELF:
             return TILEG_SP_DEEP_ELF;
+        case SP_HALFLING:
+            return TILEG_SP_HALFLING;
         case SP_HILL_ORC:
             return TILEG_SP_HILL_ORC;
         case SP_KOBOLD:
@@ -3901,8 +3914,6 @@ static tileidx_t _tileidx_player_species_base(const species_type species)
             return TILEG_SP_BARACHI;
         case SP_GNOLL:
             return TILEG_SP_GNOLL;
-        case SP_DJINNI:
-            return TILEG_SP_DJINNI;
         default:
             return TILEP_ERROR;
     }

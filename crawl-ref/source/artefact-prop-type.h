@@ -36,9 +36,7 @@ enum artefact_prop_type
     ARTP_ACCURACY,
 #endif
     ARTP_SLAYING,
-#if TAG_MAJOR_VERSION == 34
     ARTP_CURSE,
-#endif
     ARTP_STEALTH,
     ARTP_MAGICAL_POWER,
     ARTP_BASE_DELAY,

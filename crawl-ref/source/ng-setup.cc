@@ -25,7 +25,6 @@
 #include "skills.h"
 #include "spl-book.h"
 #include "spl-damage.h"
-#include "spl-summoning.h"
 #include "spl-util.h"
 #include "state.h"
 #include "tag-version.h"
@@ -128,11 +127,6 @@ item_def* newgame_make_item(object_class_type base,
     item.plus      = plus;
     item.brand     = force_ego;
 
-    // To mitigate higher shield penalties for smaller races, give small
-    // races bucklers instead of shields.
-    if (item.is_type(OBJ_ARMOUR, ARM_KITE_SHIELD) && you.body_size() < SIZE_MEDIUM)
-        item.sub_type = ARM_BUCKLER;
-
     // If the character is restricted in wearing the requested armour,
     // hand out a replacement instead.
     if (item.base_type == OBJ_ARMOUR
@@ -152,9 +146,7 @@ item_def* newgame_make_item(object_class_type base,
     ASSERT(item.quantity == 1 || is_stackable_item(item));
 
     // If that didn't help, nothing will.
-    // However, wanderer randbooks aren't yet initialized and all other
-    // starting books are guaranteed to be useful at game start.
-    if (item.base_type != OBJ_BOOKS && is_useless_item(item, false, true))
+    if (is_useless_item(item, false, true))
     {
         item = item_def();
         return nullptr;
@@ -181,9 +173,7 @@ item_def* newgame_make_item(object_class_type base,
     // Wanderers may or may not already have a spell. - bwr
     // Also, when this function gets called their possible randbook
     // has not been initialised and will trigger an ASSERT.
-    if (item.base_type == OBJ_BOOKS
-        && you.char_class != JOB_WANDERER
-        && !you.has_mutation(MUT_INNATE_CASTER))
+    if (item.base_type == OBJ_BOOKS && you.char_class != JOB_WANDERER)
     {
         spell_type which_spell = spells_in_book(item)[0];
         if (!spell_is_useless(which_spell, false, true)
@@ -219,7 +209,7 @@ static void _give_ammo(weapon_type weapon, int plus)
     switch (weapon)
     {
     case WPN_THROWN:
-        if (species::can_throw_large_rocks(you.species))
+        if (species_can_throw_large_rocks(you.species))
             newgame_make_item(OBJ_MISSILES, MI_LARGE_ROCK, 4 + plus);
         else if (you.body_size(PSIZE_TORSO) <= SIZE_SMALL)
             newgame_make_item(OBJ_MISSILES, MI_BOOMERANG, 8 + 2 * plus);
@@ -239,20 +229,6 @@ static void _give_ammo(weapon_type weapon, int plus)
     default:
         break;
     }
-}
-
-static void _cleanup_innate_magic_skills()
-{
-    // could use a reference here, but seems surprising to the reader
-    int spcasting = you.skills[SK_SPELLCASTING];
-    for (skill_type sk = SK_FIRST_MAGIC_SCHOOL; sk <= SK_LAST_MAGIC; sk++)
-    {
-        const int lvl = you.skills[sk];
-        if (lvl > spcasting)
-            spcasting = lvl;
-        you.skills[sk] = 0;
-    }
-    you.skills[SK_SPELLCASTING] = spcasting;
 }
 
 void give_items_skills(const newgame_def& ng)
@@ -329,14 +305,11 @@ void give_items_skills(const newgame_def& ng)
     if (job_gets_ranged_weapons(you.char_class))
         _give_ammo(ng.weapon, you.char_class == JOB_HUNTER ? 1 : 0);
 
-    if (you.has_mutation(MUT_NO_GRASPING))
+    if (you.species == SP_FELID)
+    {
         you.skills[SK_THROWING] = 0;
-
-    if (you.has_mutation(MUT_NO_ARMOUR))
         you.skills[SK_SHIELDS] = 0;
-
-    if (you.has_mutation(MUT_INNATE_CASTER))
-        _cleanup_innate_magic_skills();
+    }
 
     if (!you_worship(GOD_NO_GOD))
     {
@@ -436,81 +409,6 @@ static void _free_up_slot(char letter)
     }
 }
 
-static bool _spell_has_trigger(spell_type to_trigger,
-                               const set<spell_type> &triggers)
-{
-    switch (to_trigger)
-    {
-    case SPELL_BATTLESPHERE:
-        for (spell_type trigger : triggers)
-            if (battlesphere_can_mirror(trigger))
-                return true;
-        return false;
-    case SPELL_SPELLFORGED_SERVITOR:
-        for (spell_type trigger : triggers)
-            if (spell_servitorable(trigger))
-                return true;
-        return false;
-    default:
-        return true;
-    }
-}
-
-static void _setup_innate_spells()
-{
-    set<spell_type> spellset;
-    // Start with all spells from spellbooks in your inventory.
-    for (item_def& it : you.inv)
-    {
-        if (it.base_type != OBJ_BOOKS || it.sub_type == BOOK_MANUAL)
-            continue;
-        for (spell_type sp : spells_in_book(it))
-        {
-            if (!spell_is_useless(sp, false))
-            {
-                add_spell_to_memory(sp);
-                spellset.insert(sp);
-            }
-        }
-        destroy_item(it);
-    }
-
-    // Get spells at XL 3 and every odd level thereafter.
-    vector<spell_type> chosen_spells;
-    int const min_lev[] = {1,2, 2,3,4, 5,6,6, 6,7,7, 8,9};
-    int const max_lev[] = {1,2, 3,4,5, 5,6,7, 7,8,8, 9,9};
-    for (int i = 0; i < 27 / 2; i++)
-    {
-        spell_type next_spell = SPELL_NO_SPELL;
-        int seen = 0;
-        for (int s = 0; s < NUM_SPELLS; ++s)
-        {
-            const spell_type spell = static_cast<spell_type>(s);
-
-            if (!is_player_book_spell(spell)
-                || spellset.find(spell) != spellset.end()
-                || spell_is_useless(spell, false)
-                || !_spell_has_trigger(spell, spellset))
-            {
-                continue;
-            }
-
-            const int lev = spell_difficulty(spell);
-            if (lev >= min_lev[i] && lev <= max_lev[i]
-                && one_chance_in(++seen))
-            {
-                next_spell = spell;
-            }
-        }
-        ASSERT(next_spell != SPELL_NO_SPELL);
-        spellset.insert(next_spell);
-        chosen_spells.push_back(next_spell);
-    }
-
-    for (spell_type s : chosen_spells)
-        you.props[INNATE_SPELLS_KEY].get_vector().push_back(s);
-}
-
 void initial_dungeon_setup()
 {
     rng::generator levelgen_rng(BRANCH_DUNGEON);
@@ -584,19 +482,13 @@ static void _setup_generic(const newgame_def& ng,
 
     _give_basic_knowledge();
 
-    // Must be after _give_basic_knowledge
     {
         msg::suppress quiet;
-        // intentionally create the subgenerator either way, so that this has the
-        // same impact on the current main rng for all chars.
-        rng::subgenerator dj_rng;
-        if (you.has_mutation(MUT_INNATE_CASTER))
-            _setup_innate_spells();
-        else
-            add_held_books_to_library();
+        // Must be after _give_basic_knowledge
+        add_held_books_to_library();
     }
 
-    if (you.char_class == JOB_WANDERER && !you.has_mutation(MUT_INNATE_CASTER))
+    if (you.char_class == JOB_WANDERER)
         memorise_wanderer_spell();
 
     // A first pass to link the items properly.
@@ -630,8 +522,6 @@ static void _setup_generic(const newgame_def& ng,
     init_skill_order();
     init_can_currently_train();
     init_train();
-    if (you.religion == GOD_TROG)
-        join_trog_skills();
     init_training();
 
     // Apply autoinscribe rules to inventory.

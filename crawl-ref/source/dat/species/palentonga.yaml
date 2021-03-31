@@ -1,14 +1,13 @@
 enum: SP_PALENTONGA
 monster: MONS_PALENTONGA
 name: "Palentonga"
-difficulty: Simple
-difficulty_priority: 60
+difficulty: Intermediate
+difficulty_priority: 70
 species_flags:
-  - SPF_SMALL_TORSO
-  - SPF_BARDING
+  - small_torso
 aptitudes:
   xp: -1
-  hp: 0
+  hp: 1
   mp_mod: 0
   mr: 3
   short_blades: 0

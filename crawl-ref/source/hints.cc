@@ -161,7 +161,7 @@ static string _print_hints_menu(hints_types type)
     }
 
     return make_stringf("%c - %s %s %s",
-            letter, species::name(_get_hints_species(type)).c_str(),
+            letter, species_name(_get_hints_species(type)).c_str(),
                     get_job_name(_get_hints_job(type)), desc);
 }
 
@@ -293,11 +293,11 @@ static species_type _get_hints_species(unsigned int type)
     switch (type)
     {
     case HINT_BERSERK_CHAR:
-        return SP_HILL_ORC;
+        return SP_MINOTAUR;
     case HINT_MAGIC_CHAR:
         return SP_DEEP_ELF;
     case HINT_RANGER_CHAR:
-        return SP_MINOTAUR;
+        return SP_HALFLING;
     default:
         // Use something fancy for debugging.
         return SP_TENGU;
@@ -819,7 +819,7 @@ static bool _advise_use_wand()
         case WAND_FLAME:
         case WAND_PARALYSIS:
         case WAND_ICEBLAST:
-        case WAND_CHARMING:
+        case WAND_ENSLAVEMENT:
         case WAND_ACID:
         case WAND_RANDOM_EFFECTS:
         case WAND_MINDBURST:
@@ -1082,6 +1082,8 @@ static bool _tutorial_interesting(hints_event_type event)
     case HINT_YOU_POISON:
     case HINT_NEW_ABILITY_ITEM:
     case HINT_ITEM_RESISTANCES:
+    case HINT_FLYING:
+    case HINT_INACCURACY:
     case HINT_HEALING_POTIONS:
     case HINT_GAINED_SPELLCASTING:
     case HINT_FUMBLING_SHALLOW_WATER:
@@ -1209,7 +1211,10 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
         if (Hints.hints_type == HINT_BERSERK_CHAR)
         {
             text << "\nYou should probably stick with axes. Checking other "
-                    "axes' enchantments can be worthwhile, though!";
+                    "axes' enchantments can be worthwhile, but weapons can be "
+                    "cursed and difficult to remove, so unless you have a "
+                    "scroll of remove curse, only wield weapons you're ready "
+                    "to be stuck with!";
         }
         break;
 
@@ -1265,13 +1270,16 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
         cmd.push_back(CMD_REMOVE_ARMOUR);
         cmd.push_back(CMD_DISPLAY_INVENTORY);
 
-        if (you.get_innate_mutation_level(MUT_HORNS) > 0)
+        if (
+#if TAG_MAJOR_VERSION == 34
+            you.species == SP_CENTAUR ||
+#endif
+            you.species == SP_MINOTAUR)
         {
-            text << "\nNote that because of your horns you will be unable"
-                    " to wear helmets. "
-                    "(Type <w>%</w> to see a list of your mutations and "
-                    "innate abilities.)";
-            cmd.push_back(CMD_DISPLAY_MUTATIONS);
+            text << "\nNote that as a " << species_name(you.species)
+                 << " you will be unable to wear "
+                 << (you.species == SP_CENTAUR ? "boots" : "helmets")
+                 << ".";
         }
         break;
 
@@ -1749,7 +1757,8 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
 
     case HINT_YOU_CURSED:
         text << "Cursed equipment, once worn or wielded, cannot be dropped or "
-                "removed. Ashenzari will allow you to remove curses.";
+                "removed. Scrolls of remove curse will remove all curses "
+                "from your current equipment.";
         break;
 
     case HINT_REMOVED_CURSE:
@@ -2026,11 +2035,17 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
     case HINT_NEW_ABILITY_ITEM:
         // Specialcase flight because it's a guaranteed trigger in the
         // tutorial.
-        if (you.equip_flight())
+        if (you.evokable_flight())
         {
-            text << "Flight will allow you to cross deep water or lava. Items "
-                    "that allow you to fly will activate automatically when "
-                    "worn.";
+            text << "Flight will allow you to cross deep water or lava. To "
+                    "activate it, select the corresponding ability in the "
+                    "ability menu (<w>%</w>"
+#ifdef USE_TILE_LOCAL
+                    " or via <w>mouseclick</w> in the <w>command panel</w>"
+#endif
+                    "). Once flying, keep an eye on the status line and "
+                    "messages, as most forms of flight have a limited "
+                    "duration.";
         }
         else
         {
@@ -2053,6 +2068,26 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
 #endif
                 ") for details.";
         cmd.push_back(CMD_RESISTS_SCREEN);
+        break;
+
+    case HINT_FLYING:
+        if (you.evokable_flight())
+        {
+            text << "To stop flying, use the corresponding ability "
+                    "in the ability menu (<w>%</w>).";
+            cmd.push_back(CMD_USE_ABILITY);
+        }
+        break;
+
+    case HINT_INACCURACY:
+        text << "Not all items are useful, and some of them are outright "
+                "harmful. Press <w>%</w> ";
+#ifdef USE_TILE_LOCAL
+        text << "or <w>click</w> on your equipped amulet to remove it.";
+#else
+        text << "to remove your amulet.";
+#endif
+        cmd.push_back(CMD_REMOVE_JEWELLERY);
         break;
 
             // TODO: rethink this v
@@ -2982,10 +3017,11 @@ string hints_describe_item(const item_def &item)
 
                 Hints.hints_events[HINT_SEEN_RANDART] = false;
             }
-            if (item.cursed() && !long_text)
+            if (item_known_cursed(item) && !long_text)
             {
                 ostr << "\n\nOnce wielded, a cursed weapon can't be "
-                        "unwielded until the curse has been lifted.";
+                        "unwielded until the curse has been lifted by "
+                        "reading a scroll of remove curse.";
 
                 Hints.hints_events[HINT_YOU_CURSED] = false;
             }
@@ -3051,9 +3087,9 @@ string hints_describe_item(const item_def &item)
             }
             else
 #endif
-            if (you.get_innate_mutation_level(MUT_HORNS) > 0 && is_hard_helmet(item))
+            if (you.species == SP_MINOTAUR && is_hard_helmet(item))
             {
-                ostr << "Because of your horns you cannot wear helmets. "
+                ostr << "As a Minotaur you cannot wear helmets. "
                         "(Type <w>%</w> to see a list of your mutations and "
                         "innate abilities.)";
                 cmd.push_back(CMD_DISPLAY_MUTATIONS);
@@ -3112,10 +3148,11 @@ string hints_describe_item(const item_def &item)
             }
             if (wearable)
             {
-                if (item.cursed())
+                if (item_known_cursed(item))
                 {
                     ostr << "\nA cursed piece of armour, once worn, cannot be "
-                            "removed again until the curse has been lifted.";
+                            "removed again until the curse has been lifted by "
+                            "reading a scroll of remove curse.";
                 }
                 if (gives_resistance(item))
                 {
@@ -3189,11 +3226,11 @@ string hints_describe_item(const item_def &item)
             cmd.push_back(CMD_WEAR_JEWELLERY);
             cmd.push_back(CMD_REMOVE_JEWELLERY);
 
-            if (item.cursed())
+            if (item_known_cursed(item))
             {
                 ostr << "\nA cursed piece of jewellery will stick to its "
                         "wearer when equipped, and cannot be removed until "
-                        "the curse is lifted.";
+                        "you read a scroll of remove curse.";
             }
             if (gives_resistance(item))
             {
@@ -3233,9 +3270,9 @@ string hints_describe_item(const item_def &item)
             if (item.sub_type == BOOK_MANUAL)
             {
                 ostr << "A manual can greatly help you in training a skill. "
-                        "After you pick one up, the skill in question will be "
-                        "trained more efficiently and will level up faster "
-                        "until you exhaust the manual's contents.";
+                        "As long as you are carrying it, the skill in "
+                        "question will be trained more efficiently and will "
+                        "level up faster.";
                 cmd.push_back(CMD_READ);
             }
             else // It's a spellbook!

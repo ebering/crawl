@@ -589,10 +589,8 @@ tileidx_t tilep_species_to_base_tile(int sp, int level)
 #endif
     case SP_DEEP_ELF:
         return TILEP_BASE_DEEP_ELF;
-#if TAG_MAJOR_VERSION == 34
     case SP_HALFLING:
         return TILEP_BASE_HALFLING;
-#endif
     case SP_HILL_ORC:
         return TILEP_BASE_ORC;
     case SP_KOBOLD:
@@ -618,11 +616,9 @@ tileidx_t tilep_species_to_base_tile(int sp, int level)
         const int colour_offset = _draconian_colour(sp, level);
         return TILEP_BASE_DRACONIAN + colour_offset * 2;
     }
-    case SP_PALENTONGA:
-#if TAG_MAJOR_VERSION == 34
+    case SP_PALENTONGA: // placeholder
     case SP_CENTAUR:
-#endif
-        return TILEP_BASE_PALENTONGA;
+        return TILEP_BASE_CENTAUR;
     case SP_DEMIGOD:
         return TILEP_BASE_DEMIGOD;
     case SP_SPRIGGAN:
@@ -655,8 +651,6 @@ tileidx_t tilep_species_to_base_tile(int sp, int level)
         return TILEP_BASE_BARACHI;
     case SP_GNOLL:
         return TILEP_BASE_GNOLL;
-    case SP_DJINNI:
-        return TILEP_BASE_DJINNI;
     default:
         return TILEP_BASE_HUMAN;
     }
@@ -723,7 +717,6 @@ void tilep_race_default(int sp, int level, dolls_data *doll)
             hair = TILEP_HAIR_GREEN;
             break;
         case SP_NAGA:
-        case SP_DJINNI:
             hair = TILEP_HAIR_PART2_RED;
             break;
         case SP_VAMPIRE:
@@ -1018,13 +1011,12 @@ void tilep_calc_flags(const dolls_data &doll, int flag[])
         flag[TILEP_PART_BOOTS] = flag[TILEP_PART_LEG] = TILEP_FLAG_HIDE;
         flag[TILEP_PART_BODY]  = TILEP_FLAG_CUT_NAGA;
     }
-    else if (is_player_tile(doll.parts[TILEP_PART_BASE], TILEP_BASE_PALENTONGA))
+    else if (is_player_tile(doll.parts[TILEP_PART_BASE], TILEP_BASE_CENTAUR))
     {
         flag[TILEP_PART_BOOTS] = flag[TILEP_PART_LEG] = TILEP_FLAG_HIDE;
         flag[TILEP_PART_BODY]  = TILEP_FLAG_CUT_CENTAUR;
     }
-    else if (is_player_tile(doll.parts[TILEP_PART_BASE], TILEP_BASE_MERFOLK_WATER)
-             || is_player_tile(doll.parts[TILEP_PART_BASE], TILEP_BASE_DJINNI))
+    else if (is_player_tile(doll.parts[TILEP_PART_BASE], TILEP_BASE_MERFOLK_WATER))
     {
         flag[TILEP_PART_BOOTS]  = TILEP_FLAG_HIDE;
         flag[TILEP_PART_LEG]    = TILEP_FLAG_HIDE;

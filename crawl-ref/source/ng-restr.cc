@@ -11,7 +11,6 @@
 #include "ng-restr.h"
 
 #include "jobs.h"
-#include "mutation-type.h"
 #include "newgame.h"
 #include "newgame-def.h"
 #include "size-type.h"
@@ -19,25 +18,31 @@
 
 static bool _banned_combination(job_type job, species_type species)
 {
-    if (species::mutation_level(species, MUT_NO_GRASPING)
-        && (job == JOB_GLADIATOR
+    switch (species)
+    {
+    case SP_FELID:
+        if (job == JOB_GLADIATOR
             || job == JOB_BRIGAND
             || job == JOB_HUNTER
-            || job == JOB_ARCANE_MARKSMAN))
-    {
-        return true;
-    }
-
-    if (species::mutation_level(species, MUT_FORLORN)
-        && (job == JOB_BERSERKER
+            || job == JOB_ARCANE_MARKSMAN)
+        {
+            return true;
+        }
+        break;
+    case SP_DEMIGOD:
+        if (job == JOB_BERSERKER
             || job == JOB_CHAOS_KNIGHT
             || job == JOB_ABYSSAL_KNIGHT
-            || job == JOB_MONK))
-    {
-        return true;
+            || job == JOB_MONK)
+        {
+            return true;
+        }
+        break;
+    default:
+        break;
     }
 
-    if (job == JOB_TRANSMUTER && species::undead_type(species) == US_UNDEAD)
+    if (job == JOB_TRANSMUTER && species_undead_type(species) == US_UNDEAD)
         return true;
 
     return false;
@@ -45,7 +50,7 @@ static bool _banned_combination(job_type job, species_type species)
 
 char_choice_restriction species_allowed(job_type job, species_type speci)
 {
-    if (!species::is_starting_species(speci) || !is_starting_job(job))
+    if (!is_starting_species(speci) || !is_starting_job(job))
         return CC_BANNED;
 
     if (_banned_combination(job, speci))
@@ -64,13 +69,13 @@ bool character_is_allowed(species_type species, job_type job)
 
 char_choice_restriction job_allowed(species_type speci, job_type job)
 {
-    if (!species::is_starting_species(speci) || !is_starting_job(job))
+    if (!is_starting_species(speci) || !is_starting_job(job))
         return CC_BANNED;
 
     if (_banned_combination(job, speci))
         return CC_BANNED;
 
-    if (species::recommends_job(speci, job))
+    if (species_recommends_job(speci, job))
         return CC_UNRESTRICTED;
 
     return CC_RESTRICTED;
@@ -81,12 +86,12 @@ char_choice_restriction job_allowed(species_type speci, job_type job)
 char_choice_restriction weapon_restriction(weapon_type wpn,
                                            const newgame_def &ng)
 {
-    ASSERT(species::is_starting_species(ng.species));
+    ASSERT(is_starting_species(ng.species));
     ASSERT(is_starting_job(ng.job));
 
     // Some special cases:
 
-    if (species::mutation_level(ng.species, MUT_NO_GRASPING) && wpn != WPN_UNARMED)
+    if (ng.species == SP_FELID && wpn != WPN_UNARMED)
         return CC_BANNED;
 
     // These recommend short blades because they're good at stabbing,
@@ -98,9 +103,7 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
     }
 
     if (wpn == WPN_QUARTERSTAFF && ng.job != JOB_GLADIATOR
-        && !(ng.job == JOB_FIGHTER
-             // formicids are allowed to have shield + quarterstaff
-             && species::mutation_level(ng.species, MUT_QUADRUMANOUS)))
+        && !(ng.job == JOB_FIGHTER && ng.species == SP_FORMICID))
     {
         return CC_BANNED;
     }
@@ -108,11 +111,11 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
     // Javelins are always good, boomerangs not so much.
     if (wpn == WPN_THROWN)
     {
-        return species::size(ng.species) >= SIZE_MEDIUM ? CC_UNRESTRICTED
+        return species_size(ng.species) >= SIZE_MEDIUM ? CC_UNRESTRICTED
                                                        : CC_RESTRICTED;
     }
 
-    if (species::recommends_weapon(ng.species, wpn))
+    if (species_recommends_weapon(ng.species, wpn))
         return CC_UNRESTRICTED;
 
     return CC_RESTRICTED;

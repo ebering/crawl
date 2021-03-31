@@ -66,16 +66,6 @@
 #    ANDROID       -- perform an Android build (see docs/develop/android.txt)
 #    TOUCH_UI      -- enable UI behaviour more compatible with touch-screens
 #
-# There are a number of #defines that may be useful for downstream packaging
-# or custom server setups. See AppHdr.h for more details. Of note:
-#
-#    VERSIONED_CACHE_DIR -- use a cache dir per version, rather than a shared
-#                           cache dir across versions. This may be useful for
-#                           reproducible builds, since the shared cache
-#                           directory makes use of mtimes.
-#
-# To set defines from the command line while building, use EXTERNAL_DEFINES.
-# E.g.: make EXTERNAL_DEFINES="-DVERSIONED_CACHE_DIR"
 #
 # Requirements:
 #    For tile builds, you need pkg-config.
@@ -144,7 +134,7 @@ CFWARN_L += -Wextra \
 	    -Wno-type-limits \
 	    -Wno-uninitialized \
 
-DEFINES := $(EXTERNAL_DEFINES)
+DEFINES := -DTOURNEY='"0.26"' $(EXTERNAL_DEFINES)
 
 ifndef ANDROID
 LDFLAGS :=
@@ -1217,7 +1207,7 @@ SRC_PKG_ZIP   := $(PKG_SRC_DIR).zip
 greet:
 	@if [ ! -e $(GAME) ]; then\
 		printf '  * %s\n' "If you experience any problems building Crawl, please take a second look"\
-		                  "at INSTALL.md: the solution to your problem just might be in there!";\
+		                  "at INSTALL.txt: the solution to your problem just might be in there!";\
 	fi
 
 docs: $(GENERATED_DOCS)
@@ -1242,8 +1232,7 @@ TITLEIMGS = denzi_dragon denzi_kitchen_duty denzi_summoner \
             peileppe_bloax_eye baconkid_duvessa_dowan ploomutoo_ijyb \
 	    froggy_thunder_fist_nikola froggy_rune_and_run_failed_on_dis \
 	    froggy_natasha_and_boris froggy_jiyva_felid \
-	    froggy_goodgod_tengu_gold Cws_Minotauros nibiki_octopode \
-	    e_m_fields sastrei_chei anon_octopus_wizard
+	    froggy_goodgod_tengu_gold Cws_Minotauros nibiki_octopode
 
 STATICFILES = $(TILEIMAGEFILES:%=webserver/game_data/static/%.png) \
               webserver/static/stone_soup_icon-32x32.png \

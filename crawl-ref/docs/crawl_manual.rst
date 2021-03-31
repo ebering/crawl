@@ -270,15 +270,16 @@ Willpower
 
 Size
   Different species have different sizes: Spriggans and Felids are very small;
-  Kobolds are small; Ogres and Trolls are large; Nagas and Palentongas are large
-  with a medium torso; all other species are medium-sized. Many transmutations
-  will change your size. Size affects your evasion: the smaller your character,
-  the more evasive it is. On the other hand, characters of larger than medium
-  size do not suffer the usual attack penalties when standing in shallow water.
-  Characters of smaller than medium size will have problems with some larger
-  weapons. Very small characters and large characters are not able to use most
-  types of armour. Players and monsters can only constrict foes of the same size
-  or smaller. In the dungeon you can also meet tiny, very large and giant foes.
+  Halflings and Kobolds are small; Ogres and Trolls are large; Nagas and
+  Palentongas are large with a medium torso; all other species are medium-sized.
+  Many transmutations will change your size too. Size affects your evasion: the
+  smaller your character the more evasive it is. On the other hand, characters
+  of larger than medium size do not suffer the usual attack penalties when
+  standing in shallow water. Characters of smaller than medium size will have
+  problems with some larger weapons. Very small characters and large characters
+  are not able to use most types of armour. Players and monsters can only
+  constrict foes of the same size or smaller. In the dungeon you can also meet
+  tiny, very large and giant creatures.
 
 Stealth
   High stealth allows your character to move through the dungeon undetected.
@@ -299,8 +300,8 @@ mode you can directly target single monsters by use of the monster list. Use
 'Ctrl-L' to toggle this.
 
 Sometimes characters will be able to use special abilities, e.g. the Naga's
-ability to spit poison or the magical power to turn invisible granted by a
-scarf of invisibility. These are accessed through the 'a' command.
+ability to spit poison or the magical power to fly granted by a ring. These are
+accessed through the 'a' command.
 
 ****************************************
 D. Exploring the dungeon
@@ -503,9 +504,8 @@ area (diffusing Zot's attention once more) or to leave the area entirely.
 
 The Abyss is beyond Zot's comprehension, and adventurers there are safe from
 it (albeit subject to many other hazards). The Hells, along with their
-Vestibule, are a single area as far as Zot is concerned. Rumours claim there
-are ways to escape Zot's pursuit forever, but what magics could be mighty
-enough to forestall such an implacable entity?
+Vestibule, are a single area as far as Zot is concerned. Adventurers who hold
+the Orb of Zot are forever immune to Zot's power.
 
 Seeded play
 ========================================
@@ -760,6 +760,10 @@ the top of the inventory screen.
 You can use the adjust command (the '=' key) to change the letters to which your
 possessions are assigned. This command can be used to change spell or ability
 letters, too.
+
+Some items can be sticky-cursed, in which case they weld themselves to your body
+when you use them. If you are lucky, you might find magic scrolls which can rid
+you of these curses.
 
 Items like scrolls, potions, and some other types each have a characteristic,
 like a label or a colour, which will let you tell them apart on the basis of
@@ -1540,22 +1544,11 @@ Merfolk (Mf)
   still remains. The instability of their own morphogenic matrix has made them
   very accomplished transmuters, but most other magic seems foreign to them.
 
-Palentongas (Pa)
-  The Palentongas are a large, scaled mammalian race, walking on four feet and
-  swinging a powerful tail behind them. Their elephant-back armies terrorize the
-  lands outside the Dungeon.
-
-  Palentongas are best known for their powerful roll attack, curling up and
-  rolling into a crashing melee attack against nearby foes. They're well suited
-  to melee combat and to casting supportive spells, but they're significantly
-  worse at other forms of combat and advance quite slowly in experience levels.
-  Their body shape reduces the protection given by the body armour they wear.
-
 Gargoyles (Gr)
   A cross between ordinary stone gargoyles and living beings, Gargoyles are
   hideous humanoids with an affinity to rock. They have low health, but large
   amounts of innate armour which increases further as they gain levels. They
-  eventually gain the ability to fly.
+  eventually gain the ability to fly continuously.
 
   Gargoyles' partially living form grants them immunity to poison, as well as
   resistance to electricity, and protection from some effects of necromancy.
@@ -1582,6 +1575,18 @@ Draconians (Dr)
 
   Draconian colours are detailed below, in the subsection titled
   `Draconian types`_.
+
+Halflings (Ha)
+  Halflings, who are named for being about half the size of Humans, live in
+  small villages. They live simple lives and have simple interests. Sometimes a
+  particularly restless Halfling will leave their village in search of adventure.
+
+  Halflings are very small but surprisingly hardy for their size, even having an
+  innate resistance to mutagenic effects. They can use short blades and shields
+  very well, are passable with long blades, and excel in ranged combat with
+  slings. They are also very stealthy and dextrous, but are poor at magic
+  (except for translocations and air magic). They advance in levels as rapidly
+  as Humans. Halflings cannot wield large weapons.
 
 Trolls (Tr)
   Trolls are monstrous creatures with powerful claws. They have thick, knobbly
@@ -1644,12 +1649,12 @@ Kobolds (Ko)
   the sort of people you would want to spend much time with, unless you happened
   to be a Kobold yourself.
 
-  They tend to be more agile and weaker than Humans, and are slightly more
+  They tend to be more agile and weaker than Halflings, and are slightly more
   talented at using most types of magic, particularly necromancy. They are
   competent in combat, especially with short blades, maces or crossbows, and are
   also very adept at using magical devices. Lurking in the darkness, enemies can
   only see them from quite close (and vice versa!). Kobolds advance in levels as
-  quickly as Humans. Kobolds cannot wield large weapons.
+  quickly as Humans. Like Halflings, Kobolds cannot wield large weapons.
 
 Demonspawn (Ds)
   Demonspawn are horrible half-mortal, half-infernal creatures - the flip side
@@ -1665,22 +1670,16 @@ Demonspawn (Ds)
   and conjurations and much better at necromancy and invocations. Note that
   unlike Demigods, they can take on gods, although not all will accept them.
 
-Djinni (Dj)
-  Djinn are beings of smokeless fire. They enter the world spontaneously and
-  without explanation, born with a tireless hunger for knowledge and adventure.
-  Djinn have a unique relationship with magic: rather than learning spells
-  from books, their spells come from within, welling up from their fiery core
-  as they gain experience. They draw from that same fiery core to cast spells -
-  for Djinn, magical power and health are one and the same.
+Palentongas (Pa)
+  The Palentongas are a large, scaled mammalian race, walking on four feet and
+  swinging a powerful tail behind them. Their elephant-back armies terrorize the
+  lands outside the Dungeon.
 
-  As elemental beings, Djinn are immune to poison and highly resistant to
-  fire, though cold damage is deeply inimical to them. Since they float
-  through the air without need for legs or feet, they cannot wear boots.
-
-  Djinn are middlingly competent at most forms of physical combat, but have
-  a particular aptitude for spellcasting. Their Spellcasting skill grants
-  the same level of spell success and power that other races need multiple
-  skills to reach.
+  Palentongas are best known for their powerful roll attack, curling up and
+  rolling into a crashing melee attack against nearby foes. They're well suited
+  to melee combat and to casting supportive spells, but they're significantly
+  worse at other forms of combat and advance quite slowly in experience levels.
+  Their body shape reduces the protection given by the body armour they wear.
 
 Spriggans (Sp)
   Spriggans are small magical creatures distantly related to Elves. They love to
@@ -1699,8 +1698,9 @@ Tengu (Te)
   The Tengu are an ancient and feared species of bird-people with a legendary
   propensity for violence. Basically humanoid with bird-like heads and clawed
   feet, the Tengu can wear all types of armour except helmets and boots. Despite
-  their lack of wings, powerful Tengu can fly magically, and their movement
-  speed and evasion are increased slightly while flying.
+  their lack of wings, powerful Tengu can fly magically, and very powerful
+  members of this species can stay in the air indefinitely. Their movement speed
+  and evasion are increased slightly while flying.
 
   They are experts at all forms of fighting, including the magical arts of
   combat (conjurations, summonings and, to a lesser extent, necromancy). They
@@ -1781,14 +1781,14 @@ Vampires (Vp)
   negative energy and torment, resistant to damage from the cold), but cannot
   physically regenerate when monsters are in sight and are less resilient. On
   the other hand, a Vampire full with blood will regenerate very quickly, but
-  will lose all undead powers. Upon growing, they learn to transform into
-  fast-moving bats. Unlike other undead species, they may be mutated normally
-  at all times.
+  will lose all undead powers. Vampires can never starve. Upon growing, they
+  learn to transform into fast-moving bats. Unlike other undead species, they
+  may be mutated normally at all times.
 
 Demigods (Dg)
   Demigods are mortals with some divine or angelic ancestry, however distant.
   Demigods look more or less like members of their mortal part's species, but
-  have excellent attributes (Str, Int, Dex) and are extremely robust. They can
+  have excellent attributes (Str, Int, Dex) and are extremely robust; they can
   also draw on great supplies of magical energy. On the downside, they advance
   more slowly in experience than any other race, gain skills slightly less
   quickly than Humans and, due to their status, cannot worship the various gods
@@ -1823,7 +1823,7 @@ Nagas (Na)
   invisible creatures, and have tough skin, but their tails are relatively slow
   and cannot move them around as quickly as can other creatures' legs (this only
   affects their movement rate; all other actions are at normal speed). Like
-  Palentongas, their body shape also prevents them from gaining full protection
+  Centaurs, their body shape also prevents them from gaining full protection
   from body armour. A Naga's biggest forte is stealth: Nagas are very good at
   moving unnoticed. Their tails eventually grow strong enough to constrict
   their foes in combat.
@@ -1858,8 +1858,8 @@ Felids (Fe)
 
   Their agility and stealth are legendary, as is their ability to get to hard to
   reach places. They move faster than most races, but don't run as fast as
-  Spriggans. Felids advance in levels very slowly. They are skilled with many
-  forms of magic, though less so with raw elemental magic.
+  Centaurs or Spriggans. Felids advance in levels very slowly. They are skilled
+  with many forms of magic, though less so with raw elemental magic.
 
   Felids gain extra lives as they increase in levels. Upon death, they will be
   resurrected in a safe place, losing an experience level in the process.
@@ -1884,7 +1884,8 @@ Mummies (Mu)
   levels, they become increasingly in touch with the powers of death, but cannot
   use some types of necromancy which only affect living creatures. The side
   effects of necromantic magic tend to be relatively harmless to Mummies.
-  However, their desiccated bodies are highly flammable. They also cannot drink.
+  However, their desiccated bodies are highly flammable. They also do not need
+  to eat or drink and, in any case, are incapable of doing so.
 
   Like other undead, mummies are naturally immune to poisons, negative energy
   and torment; have little warmth left to be affected by cold; and are not
@@ -1919,8 +1920,8 @@ Grey Draconians
 Black Draconians
   can unleash huge electrical discharges, and are naturally insulated. They are
   good at air magic but feel cumbersome with earth magic. Their wings will
-  eventually grow larger, which allows them to fly when combined with their
-  natural skill with air magic.
+  eventually grow larger, which allows them to fly continuously when combined
+  with their natural skill with air magic.
 
 Purple Draconians
   are highly adapted to all spellcasting in general, and to hexes in
@@ -1943,7 +1944,7 @@ definitely easier than others, at least to begin with. The best backgrounds for
 a beginner are probably Gladiators and Berserkers; if you really want to play a
 magician, try a Conjurer or a Hedge Wizard. However, not all species are equally
 well suited for all backgrounds. After you have selected a species, the background
-selection menu will show backgrounds generally considered to be more accessible
+selection menu while show backgrounds generally considered to be more accessible
 for a species in a brighter colour.
 
 Each background starts out with a different set of skills and items, but from
@@ -2043,13 +2044,14 @@ Transmuters
   Transmuters specialise in transmutation magic, and can cause strange changes
   in themselves and others. They deal damage primarily in unarmed combat, often
   using transformations to enhance their defensive and offensive capabilities.
-  They begin the game with the Book of Changes and a robe.
+  They begin the game with the Book of Changes, some arrows to turn into snakes,
+  and a robe.
 
 Warpers
   Warpers specialise in translocation magic, and are experts in travelling long
   distances and positioning themselves precisely and use this to their advantage
   in melee or missile combat. They start with a scroll of blinking, the Book of
-  Spatial Translocations, some dispersal boomerangs, a simple weapon of their
+  Spatial Translocations, some dispersal tomahawks, a simple weapon of their
   choice, and leather armour.
 
 Arcane Marksmen
@@ -2194,7 +2196,7 @@ There are a number of individual weapon skills for missile weapons:
   * Crossbows
   * Slings
 
-Throwing is the skill for all things hurled without a launcher: boomerangs,
+Throwing is the skill for all things hurled without a launcher: tomahawks,
 javelins, nets, darts, etc. The other skills refer to various types of missiles
 shot with a launcher. Since stones can be thrown without launchers to some
 effect, these skills crosstrain:
@@ -2891,8 +2893,8 @@ You can use inscriptions to define shortcuts for easy access to items,
 regardless of their actual inventory letter. For example, if an item's
 inscription contains "@w9", you can type 'w9' in order to wield it. Instead of
 the 9, any other digit works as well. And instead of 'w'ield, any other command
-used for handling items can be used: 'r'ead, 'q'uaff, e'v'oke, 'f'ire, etc.
-Using "@*9" will make any action command followed by '9' use this item.
+used for handling items can be used: 'e'at, 'r'ead, 'q'uaff, e'v'oke, 'f'ire,
+etc. Using "@*9" will make any action command followed by '9' use this item.
 
 Safety inscriptions
 ========================================
@@ -2938,6 +2940,9 @@ commands:
 !v
   Prompt before evoking this item.
 
+!Q
+  Prompt before explicitly quivering this item.
+
 =g
   Pick this item up automatically if autopickup is on.
 
@@ -2948,13 +2953,10 @@ commands:
   Include this item in automatic quivering.
 
 =F
-  Exclude this item when cycling quiver actions.
+  Exclude this item when cycling ammunition.
 
 \+F
-  Include this item when cycling quiver actions.
-
-!Q
-  Prompt before explicitly quivering this item. Entails =F,=f.
+  Include this item when cycling ammunition.
 
 =R
   Do not offer to swap out this ring if another one can be removed instead.
@@ -2980,8 +2982,8 @@ rXXX
   levels of negative energy resistance), rC- (cold vulnerability).
 
 \+XXX
-  signifies an ability you can evoke via the 'a' command. E.g. +Inv (evocable,
-  temporary invisibility).
+  signifies an ability you can evoke via the 'a' command. E.g. +Fly (evocable,
+  temporary flight).
 
 \-XXX
   signifies a suppressed ability. E.g. -Cast (spellcasting forbidden).

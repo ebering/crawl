@@ -69,10 +69,8 @@ static uint8_t _jewellery_type_from_artefact_prop(const string &s
         return AMU_REGENERATION;
 #endif
 
-#if TAG_MAJOR_VERSION == 34
     if (s == "Inacc")
         return AMU_INACCURACY;
-#endif
     if (s == "Spirit")
         return AMU_GUARDIAN_SPIRIT;
     if (s == "Faith")
@@ -88,18 +86,14 @@ static uint8_t _jewellery_type_from_artefact_prop(const string &s
         return RING_FIRE;
     if (s == "Ice")
         return RING_ICE;
-#if TAG_MAJOR_VERSION == 34
     if (s == "+/*Tele")
         return RING_TELEPORTATION;
-#endif
     if (s == "Wiz")
         return RING_WIZARDRY;
     if (s == "SInv")
         return RING_SEE_INVISIBLE;
-#if TAG_MAJOR_VERSION == 34
     if (s == "Noisy" || s == "Stlth-")
         return RING_ATTENTION;
-#endif
     if (s == "+Fly")
         return RING_FLIGHT;
     if (s == "rPois")
@@ -119,10 +113,8 @@ static uint8_t _jewellery_type_from_artefact_prop(const string &s
         return RING_INTELLIGENCE;
     if (s.substr(0, 2) == "EV")
         return RING_EVASION;
-#if TAG_MAJOR_VERSION == 34
     if (s.substr(0, 5) == "Stlth")
         return RING_STEALTH;
-#endif
     if (s.substr(0, 2) == "WL")
         return RING_WILLPOWER;
 
@@ -481,7 +473,7 @@ bool chardump_parser::_check_char(const vector<string> &tokens)
                 race = tokens[k-3].substr(1) + " " + tokens[k-2];
             string role = tokens[k-1].substr(0, tokens[k-1].length() - 1);
 
-            const species_type sp = species::from_str_loose(race);
+            const species_type sp = find_species_from_string(race);
             if (sp == SP_UNKNOWN)
             {
                 mprf("Unknown species: %s", race.c_str());

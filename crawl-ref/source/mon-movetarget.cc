@@ -914,14 +914,9 @@ static bool _band_ok(monster * mon)
 
 void check_wander_target(monster* mon, bool isPacified)
 {
-    const monster *band_leader = _active_band_leader(mon);
     // default wander behaviour
     if (mon->pos() == mon->target
-            // for batty bands, we want the logic in _band_ok to take
-            // precedence; this keeps band-related pathing from taking to
-            // much cpu in extreme cases (like a lost band leader).
-            // TODO: does this lead to weird effects?
-        || mons_is_batty(*mon) && !band_leader
+        || mons_is_batty(*mon)
         || (!isPacified && !mons_is_avatar(mon->type) && one_chance_in(20))
         || herd_monster(*mon) && !_herd_ok(mon)
         || !_band_ok(mon))
@@ -939,8 +934,11 @@ void check_wander_target(monster* mon, bool isPacified)
         if (need_target && herd_monster(*mon))
             need_target = _herd_wander_target(mon);
 
-        if (need_target && band_leader != nullptr)
+        if (need_target
+            && _active_band_leader(mon) != nullptr)
+        {
             need_target = _band_wander_target(mon);
+        }
 
         // XXX: This is really dumb wander behaviour... instead of
         // changing the goal square every turn, better would be to

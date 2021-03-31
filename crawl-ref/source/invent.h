@@ -41,7 +41,10 @@ enum object_selector
     OSEL_BRANDABLE_WEAPON        = -14,
     OSEL_ENCHANTABLE_WEAPON      = -15,
     OSEL_BLESSABLE_WEAPON        = -16,
-    OSEL_CURSABLE                = -17, // Items that are worn and cursable
+    OSEL_CURSABLE                = -17, // Items that are cursable and not
+                                        // known-cursed. Unknown-cursed items
+                                        // are included, to prevent information
+                                        // leakage.
 #if TAG_MAJOR_VERSION == 34
     OSEL_DIVINE_RECHARGE         = -18,
 #endif

@@ -292,10 +292,10 @@ void fill_doll_equipment(dolls_data &result)
         tileidx_t ch;
         switch (you.species)
         {
+        case SP_PALENTONGA: // placeholder
 #if TAG_MAJOR_VERSION == 34
-        case SP_CENTAUR:
+        case SP_CENTAUR: ch = TILEP_TRAN_STATUE_CENTAUR;  break;
 #endif
-        case SP_PALENTONGA: ch = TILEP_TRAN_STATUE_PALENTONGA;  break;
         case SP_NAGA:    ch = TILEP_TRAN_STATUE_NAGA;     break;
         case SP_FELID:   ch = TILEP_TRAN_STATUE_FELID;    break;
         case SP_OCTOPODE:ch = TILEP_TRAN_STATUE_OCTOPODE; break;
@@ -309,10 +309,10 @@ void fill_doll_equipment(dolls_data &result)
     case transformation::lich:
         switch (you.species)
         {
+        case SP_PALENTONGA: // placeholder
 #if TAG_MAJOR_VERSION == 34
-        case SP_CENTAUR:
+        case SP_CENTAUR: ch = TILEP_TRAN_LICH_CENTAUR;  break;
 #endif
-        case SP_PALENTONGA: ch = TILEP_TRAN_LICH_PALENTONGA;  break;
         case SP_NAGA:    ch = TILEP_TRAN_LICH_NAGA;     break;
         case SP_FELID:   ch = TILEP_TRAN_LICH_FELID;    break;
         case SP_OCTOPODE:ch = TILEP_TRAN_LICH_OCTOPODE; break;
@@ -430,7 +430,7 @@ void fill_doll_equipment(dolls_data &result)
                     result.parts[TILEP_PART_HELM] = TILEP_HELM_HORNS_CAT;
                 }
             }
-            else if (species::is_draconian(you.species))
+            else if (species_is_draconian(you.species))
                 result.parts[TILEP_PART_HELM] = TILEP_HELM_HORNS_DRAC;
             else
                 switch (you.get_mutation_level(MUT_HORNS))
@@ -490,7 +490,7 @@ void fill_doll_equipment(dolls_data &result)
             (you.duration[DUR_LIQUID_FLAMES] ? TILEP_ENCH_STICKY_FLAME : 0);
     }
     // Draconian head/wings.
-    if (species::is_draconian(you.species))
+    if (species_is_draconian(you.species))
     {
         tileidx_t base = 0;
         tileidx_t head = 0;
@@ -614,14 +614,14 @@ void pack_doll_buf(SubmergedTileBuffer& buf, const dolls_data &doll,
         flags[TILEP_PART_BOOTS] = is_naga ? TILEP_FLAG_NORMAL : TILEP_FLAG_HIDE;
     }
 
-    const bool is_ptng = is_player_tile(doll.parts[TILEP_PART_BASE],
-                                        TILEP_BASE_PALENTONGA);
+    const bool is_cent = is_player_tile(doll.parts[TILEP_PART_BASE],
+                                        TILEP_BASE_CENTAUR);
 
     if (doll.parts[TILEP_PART_BOOTS] >= TILEP_BOOTS_CENTAUR_BARDING
         && doll.parts[TILEP_PART_BOOTS] <= TILEP_BOOTS_CENTAUR_BARDING_RED
         || doll.parts[TILEP_PART_BOOTS] == TILEP_BOOTS_BLACK_KNIGHT)
     {
-        flags[TILEP_PART_BOOTS] = is_ptng ? TILEP_FLAG_NORMAL : TILEP_FLAG_HIDE;
+        flags[TILEP_PART_BOOTS] = is_cent ? TILEP_FLAG_NORMAL : TILEP_FLAG_HIDE;
     }
 
     // Set up mcache data based on equipment. We don't need this lookup if both

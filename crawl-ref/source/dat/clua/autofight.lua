@@ -377,12 +377,7 @@ function af_hp_is_low()
 end
 
 function af_mp_is_low()
-  local mp, mmp
-  if you.race() == "Djinni" then
-    mp, mmp = you.hp()
-  else
-    mp, mmp = you.mp()
-  end
+  local mp, mmp = you.mp()
   -- AUTOMAGIC_STOP is currently in automagic.lua
   return (100*mp <= AUTOMAGIC_STOP*mmp)
 end

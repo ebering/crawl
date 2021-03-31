@@ -288,7 +288,7 @@ void monster::add_enchantment_effect(const mon_enchant &ench, bool quiet)
 
         if (is_patrolling())
         {
-            // Charmed monsters stop patrolling and forget their patrol
+            // Enslaved monsters stop patrolling and forget their patrol
             // point; they're supposed to follow you now.
             patrol_point.reset();
             firing_pos.reset();
@@ -671,7 +671,7 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
 
         if (is_patrolling())
         {
-            // Charmed monsters stop patrolling and forget their patrol point,
+            // Enslaved monsters stop patrolling and forget their patrol point,
             // in case they were on order to wait.
             patrol_point.reset();
         }
@@ -1032,11 +1032,6 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
             simple_monster_message(*this, " stops rolling and uncurls.");
         break;
 
-    case ENCH_CONCENTRATE_VENOM:
-        if (!quiet)
-            simple_monster_message(*this, " no longer looks unusually toxic.");
-        break;
-
     default:
         break;
     }
@@ -1158,7 +1153,7 @@ bool monster::decay_enchantment(enchant_type en, bool decay_degree)
     return false;
 }
 
-bool monster::clear_far_engulf(bool)
+bool monster::clear_far_engulf(void)
 {
     if (you.duration[DUR_WATER_HOLD]
         && (mid_t) you.props["water_holder"].get_int() == mid)
@@ -2099,7 +2094,7 @@ static const char *enchant_names[] =
 #endif
     "vortex", "vortex_cooldown", "vile_clutch", "waterlogged", "ring_of_flames",
     "ring_chaos", "ring_mutation", "ring_fog", "ring_ice", "ring_neg",
-    "ring_acid", "ring_miasma", "concentrate_venom",
+    "ring_acid", "ring_miasma",
     "buggy", // NUM_ENCHANTMENTS
 };
 
@@ -2252,7 +2247,6 @@ int mon_enchant::calc_duration(const monster* mons,
     case ENCH_MIRROR_DAMAGE:
     case ENCH_SAP_MAGIC:
     case ENCH_STILL_WINDS:
-    case ENCH_CONCENTRATE_VENOM:
         cturn = 300 / _mod_speed(25, mons->speed);
         break;
     case ENCH_SLOW:

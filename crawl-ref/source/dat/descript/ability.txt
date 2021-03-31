@@ -7,6 +7,10 @@ Spit Poison ability
 
 Spits poison at a targeted creature.
 %%%%
+Blink ability
+
+Randomly translocates the user a short distance.
+%%%%
 Breathe Dispelling Energy ability
 
 Breathes a bolt of dispelling energy at a targeted creature, possibly removing
@@ -71,6 +75,12 @@ Revivify ability
 Return to life, transitioning from bloodless to alive. This process renders
 the user temporarily frail.
 %%%%
+Fly ability
+
+Starts flight. During flight you can safely cross water and similar obstacles.
+Be warned, though, that some forms of flight are temporary and may expire at
+inopportune moments.
+%%%%
 Hurl Damnation ability
 
 Blasts a targeted enemy with damnation. These unholy forces harm the victim and
@@ -111,7 +121,7 @@ your destination.
 %%%%
 Evoke Blink ability
 
-Randomly translocates the user a short distance.
+<Blink ability>
 %%%%
 Evoke Berserk Rage ability
 
@@ -122,9 +132,17 @@ Evoke Invisibility ability
 Turns the user invisible. Turning invisible causes magical contamination and
 may eventually cause glowing, nullifying the invisibility.
 %%%%
+Evoke Flight ability
+
+<Fly ability>
+%%%%
+Stop Flying ability
+
+Stops flying.
+%%%%
 Evoke Thunderclouds ability
 
-Creates a mighty thundercloud surrounding the user.
+Create a mighty thunderclouds around the user.
 %%%%
 End Transformation ability
 
@@ -141,7 +159,7 @@ and unclean will be affected by powerful and damaging effects, undead and
 demons will be affected by weaker rebukes, and any other intelligent creatures
 will have confusion sown amongst them, with heretics and priests of gods other
 than Zin being punished much more strongly. The effectiveness of the recitation
-is increased by Invocations skill and piety.
+is increased by Invocations skill.
 %%%%
 Vitalisation ability
 
@@ -522,15 +540,18 @@ Cure Bad Mutation ability
 Removes a randomly selected bad mutation.
 %%%%
 # Ashenzari
-Curse Item ability
+Scrying ability
 
-Curses a chosen equipped item, binding it to the wearer until the curse
-and the item both are broken. Cursed items can no longer be enchanted or
-modified.
+Provides astral sight, allowing you to see through walls.
 %%%%
-Shatter The Chains ability
+Transfer Knowledge ability
 
-Destroys a chosen cursed equipped item, relieving the wearer of the curse.
+Sacrifices part of one of your skills to improve another. The transfer will
+take place gradually as you gain experience.
+%%%%
+End Transfer Knowledge ability
+
+Aborts an ongoing skill transfer.
 %%%%
 # Dithmenos
 Shadow Step ability
@@ -545,7 +566,7 @@ are permanently invisible and are immune to poison, draining, and torment.
 All incoming damage is halved, you bleed smoke on any incoming attack, and
 you have infinite willpower. However, your ability to deal damage in melee
 and with ranged attacks is halved, your spellcasting power is greatly
-hampered, and your maximum health is further drained when taking damage.
+hampered, and your skills are further drained when taking damage.
 Invocations skill increases the duration of the transformation.
 %%%%
 # Gozag
@@ -692,7 +713,8 @@ decreased by one. This will likely cause you to lose ranks in trained skills.
 %%%%
 Sacrifice an Eye ability
 
-Sacrifices an eye, causing you to have a much harder time hitting targets.
+Sacrifices an eye, causing you to have a much harder time hitting targets, as
+if wearing an amulet of inaccuracy.
 %%%%
 Sacrifice Resistance ability
 
@@ -749,6 +771,10 @@ Donate Gold ability
 Donates half of your gold to Zin, which will increase your piety over time. The
 overall increase is determined by the size of your donation.
 %%%%
+Curse Item ability
+
+Curses a chosen item, at the cost of a scroll of remove curse.
+%%%%
 Recall Ancestor ability
 
 Recalls your ancestor from anywhere in the dungeon to your immediate
@@ -799,7 +825,7 @@ the landing spot and taking two turns to complete the motion.
 Serpent's Lash ability
 
 Allows you to move at supernatural speeds, making any normal movements up to a
-distance of two tiles instant. Martial attacks performed under the effect of
+distance of two tiles instantly. Martial attacks performed under the effect of
 Serpent's Lash are more damaging and never miss.
 %%%%
 Heavenly Storm ability

@@ -328,6 +328,10 @@ tier1_gauntlet_arenas = {
     plant  = "demonic",
   },
   {
+    first  = {mons = "death ooze", min = 1, max = 1},
+    plant  = "withered",
+  },
+  {
     first  = {mons = "sixfirhy", min = 1, max = 1},
     second = {mons = "ufetubus", min = 2, max = 4},
     liquid = "water",
@@ -388,6 +392,10 @@ tier1_gauntlet_arenas = {
   {
     first  = {mons = "flying skull band", min = 1, max = 1},
     plant  = "withered",
+  },
+  {
+    first  = {mons = "queen ant", min = 1, max = 1},
+    second = {mons = "soldier ant", min = 3, max = 6},
   },
   {
     second = {mons = "hornet", min = 2, max = 3},
@@ -501,7 +509,8 @@ tier2_gauntlet_arenas = {
     plant  = "demonic",
   },
   {
-    first = {mons = "quicksilver ooze", min = 1, max = 1},
+    second = {mons = "death ooze", min = 1, max = 1},
+    third  = {mons = "jelly w:5 / slime creature", min = 2, max = 4},
     liquid = "water",
   },
   {

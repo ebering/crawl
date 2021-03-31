@@ -1484,8 +1484,11 @@ static vector<coord_def> _xom_scenery_candidates()
     vector<coord_def> candidates;
     vector<coord_def> closed_doors;
     vector<coord_def> open_doors;
-    for (vision_iterator ri(you); ri; ++ri)
+    for (radius_iterator ri(you.pos(), LOS_DEFAULT); ri; ++ri)
     {
+        if (!you.see_cell(*ri))
+            continue;
+
         dungeon_feature_type feat = env.grid(*ri);
         if (feat_is_fountain(feat))
             candidates.push_back(*ri);
@@ -1788,7 +1791,7 @@ static void _xom_enchant_monster(bool helpful)
             BEAM_PETRIFY,
             BEAM_SLOW,
             BEAM_PARALYSIS,
-            BEAM_CHARM,
+            BEAM_ENSLAVE,
         };
         ench = RANDOM_ELEMENT(enchantments);
     }
@@ -1971,8 +1974,7 @@ static void _xom_pseudo_miscast(int /*sever*/)
     //////////////////////////////////////////////
     // Body, player species, transformations, etc.
 
-    if (starts_with(species::skin_name(you.species), "bandage")
-        && you_can_wear(EQ_BODY_ARMOUR, true))
+    if (you.species == SP_MUMMY && you_can_wear(EQ_BODY_ARMOUR, true))
     {
         messages.emplace_back("You briefly get tangled in your bandages.");
         if (!you.airborne() && !you.swimming())
@@ -1996,7 +1998,7 @@ static void _xom_pseudo_miscast(int /*sever*/)
         messages.push_back(str);
     }
 
-    if (species::has_hair(you.species))
+    if (species_has_hair(you.species))
     {
         messages.emplace_back("Your eyebrows briefly feel incredibly bushy.");
         messages.emplace_back("Your eyebrows wriggle.");

@@ -75,6 +75,8 @@ Salamander
 
 Serpent
 
+Tortoise
+
 Turtle
 
 # fish
@@ -133,6 +135,8 @@ Dolphin
 Echidna
 
 Elephant
+
+Hare
 
 Hart
 

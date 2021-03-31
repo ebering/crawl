@@ -153,10 +153,7 @@ static skill_type _wanderer_role_skill_select(stat_type selected_role,
         break;
 
     case STAT_INT:
-        if (you.has_mutation(MUT_INNATE_CASTER))
-            selected_skill = SK_SPELLCASTING;
-        else
-            selected_skill = random_choose(SK_SPELLCASTING, sk_1, sk_2);
+        selected_skill = random_choose(SK_SPELLCASTING, sk_1, sk_2);
         break;
 
     default:
@@ -165,7 +162,7 @@ static skill_type _wanderer_role_skill_select(stat_type selected_role,
 
     if (selected_skill == NUM_SKILLS)
     {
-        ASSERT(you.species == SP_FELID); // ?? maybe MUT_NO_GRASPING?
+        ASSERT(you.species == SP_FELID);
         selected_skill = SK_UNARMED_COMBAT;
     }
 
@@ -399,15 +396,15 @@ static void _good_potion_or_scroll()
     const vector<pair<pair<object_class_type, int>, int>> options = {
         { { OBJ_SCROLLS, SCR_FEAR }, 1 },
         { { OBJ_SCROLLS, SCR_BLINKING },
-            you.stasis() ? 0 : 1 },
+            you.species == SP_FORMICID ? 0 : 1 },
         { { OBJ_POTIONS, POT_HEAL_WOUNDS },
-            (you.has_mutation(MUT_NO_DRINK)
-             || you.get_mutation_level(MUT_NO_POTION_HEAL) >= 3) ? 0 : 1 },
+            (you.species == SP_MUMMY
+             || you.species == SP_VINE_STALKER) ? 0 : 1 },
         { { OBJ_POTIONS, POT_HASTE },
-            (you.has_mutation(MUT_NO_DRINK)
-             || you.stasis()) ? 0 : 1 },
+            (you.species == SP_MUMMY
+             || you.species == SP_FORMICID) ? 0 : 1 },
         { { OBJ_POTIONS, POT_BERSERK_RAGE },
-            (you.stasis()
+            (you.species == SP_FORMICID
              || you.is_lifeless_undead(false)) ? 0 : 1},
     };
 
@@ -428,9 +425,9 @@ static void _decent_potion_or_scroll()
     // xxx: could we use is_useless_item here? (not without dummy items...?)
     const vector<pair<pair<object_class_type, int>, int>> options = {
         { { OBJ_SCROLLS, SCR_TELEPORTATION },
-            you.stasis() ? 0 : 1 },
+            you.species == SP_FORMICID ? 0 : 1 },
         { { OBJ_POTIONS, POT_CURING },
-            you.has_mutation(MUT_NO_DRINK) ? 0 : 1 },
+            you.species == SP_MUMMY ? 0 : 1 },
         { { OBJ_POTIONS, POT_LIGNIFY },
             you.is_lifeless_undead(false) ? 0 : 1 },
     };
@@ -456,7 +453,7 @@ static void _wanderer_random_evokable()
     else
     {
         wand_type selected_wand =
-              random_choose(WAND_CHARMING, WAND_PARALYSIS, WAND_FLAME);
+              random_choose(WAND_ENSLAVEMENT, WAND_PARALYSIS, WAND_FLAME);
         newgame_make_item(OBJ_WANDS, selected_wand, 1, 15);
     }
 }

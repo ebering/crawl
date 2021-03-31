@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include <vector>
-
 #include "beh-type.h"
 #include "coord-def.h"
 #include "enum.h"
@@ -64,6 +62,3 @@ bool summon_can_attack(const monster* mons, const actor* targ);
 void shake_off_monsters(const actor* target);
 
 void set_nearest_monster_foe(monster* mon, bool near_player = false);
-
-vector<monster *> find_allies_targeting(const actor &a);
-bool is_ally_target(const actor &a);

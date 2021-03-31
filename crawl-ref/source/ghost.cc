@@ -734,16 +734,27 @@ void ghost_demon::init_dancing_weapon(const item_def& weapon, int power)
     damage = max(1, damage * power / 100);
 }
 
-void ghost_demon::init_spectral_weapon(const item_def& weapon)
+void ghost_demon::init_spectral_weapon(const item_def& weapon, int power)
 {
+    int damg = property(weapon, PWPN_DAMAGE);
+
+    if (power > 100)
+        power = 100;
+
     colour = weapon.get_colour();
-    flies  = true;
-    xl     = 15;
-    damage = property(weapon, PWPN_DAMAGE) * 4 / 3;
+    flies = true;
+
+    // Offense and defenses all scale with power.
+    xl        = 2 + div_rand_round(power, 4);
+    damage    = damg;
+    int scale = 250 * 150 / (50 + power);
+    damage   *= scale + 125;
+    damage   /= scale;
+
     speed  = 30;
-    ev     = 15;
-    ac     = 7;
-    max_hp = random_range(20, 30);
+    ev     = 10 + div_rand_round(power, 10);
+    ac     = 2 + div_rand_round(power, 10);
+    max_hp = 10 + div_rand_round(power, 3);
 }
 
 // Used when creating ghosts: goes through and finds spells for the
@@ -894,7 +905,7 @@ bool debug_check_ghost(const ghost_demon &ghost)
         return false;
     if (ghost.brand < SPWPN_NORMAL || ghost.brand > MAX_GHOST_BRAND)
         return false;
-    if (!species::is_valid(ghost.species))
+    if (!species_type_valid(ghost.species))
         return false;
     if (!job_type_valid(ghost.job))
         return false;

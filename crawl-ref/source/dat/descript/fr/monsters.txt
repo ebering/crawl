@@ -567,6 +567,12 @@ chimera
 Une grotesque parodie de la nature, cette créature fantastique se compose de
 trois bêtes individuels combinés en une seul.
 %%%%
+crawling corpse
+
+Un cadavre faiblement animé par nécromancie. Il est facilement destructible,
+mais aussi capable de fusionner avec d'autres pour former d'autres horreurs
+plus puissantes.
+%%%%
 crimson imp
 
 Un petit démon mineur. Sa mâchoire dentée semble être bloquée en un rictus
@@ -667,6 +673,11 @@ magie infernale de la mort.
 deep elf knight
 
 Un combattant elfe profond aguerri.
+%%%%
+deep elf mage
+
+Un elfe profond ayant appris la magie meurtrière. Les mages elfes profonds
+connaissent tout un large panel de sorts nocifs.
 %%%%
 deep elf master archer
 
@@ -1189,7 +1200,7 @@ iron troll
 Un énorme troll aux membres puissant et recouvert de plaques qui ressemblent
 légèrement à du fer rouillé, particulièrement à cause de leur dureté.
 %%%%
-ironbound preserver
+ironheart preserver
 
 De grandes silhouettes revêtus en armure lourde, les preservers protégent leurs
 alliés en acceptant généreusement une partie des blessures qui leur sont
@@ -1291,6 +1302,12 @@ attirée d'un instinct persistant vers le moment de la mort. Si puissant est
 cette impulsion envers elle même qu'elle saisit au passage d'autres âmes,
 perdant les derniers vestiges de sa conscience en la mémoire de la vie des
 autres.
+%%%%
+macabre mass
+
+Un ensemble de membres fusionnés et déformés, faiblement animés par
+nécromancie. C'est facile à exterminer mais c'est aussi capable de fusionner
+avec d'autres pour former d'autres horreurs plus puissantes.
 %%%%
 manticore
 
@@ -1537,6 +1554,13 @@ quasit
 
 Un petit démon lâche avec une longue queue pointue. Ses griffes acérées sont
 couvertes d'un venin qui raidit les muscles.
+%%%%
+queen ant
+
+Une fourmi boursouflée, couverte d'une armure chitineuse et possédant un poison
+puissant. C'est la souveraine de la colonie et, lorsqu'elle n'est pas dérangée,
+elle pond perpétuellement des œufs. Auparavant capable de voler, elle a depuis
+longtemps perdu ses ailes ; seul des moignons rudimentaires restent.
 %%%%
 queen bee
 
@@ -2002,6 +2026,12 @@ explosions de vent.
 wolf
 
 Un canidé fort et sauvage, avec des dents tranchantes et un gros appétit.
+%%%%
+worker ant
+
+Un insecte sans ailes avec des mandibules acérées capable d'injecter un poison
+mortel. C'est une ouvrière, et sa tâche est de récupérer de la nourriture —
+n'importe quel être vivant qu'elle rencontre est un repas potentiel.
 %%%%
 worm
 

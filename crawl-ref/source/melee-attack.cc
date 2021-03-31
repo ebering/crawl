@@ -68,7 +68,7 @@ melee_attack::melee_attack(actor *attk, actor *defn,
     ::attack(attk, defn),
 
     attack_number(attack_num), effective_attack_number(effective_attack_num),
-    cleaving(is_cleaving), is_riposte(false), is_projected(false), roll_dist(0),
+    cleaving(is_cleaving), is_riposte(false), roll_dist(0),
     wu_jian_attack(WU_JIAN_ATTACK_NONE),
     wu_jian_number_of_targets(1)
 {
@@ -84,8 +84,7 @@ melee_attack::melee_attack(actor *attk, actor *defn,
 bool melee_attack::can_reach()
 {
     return attk_type == AT_HIT && weapon && weapon_reach(*weapon) > REACH_NONE
-           || flavour_has_reach(attk_flavour)
-           || is_projected;
+           || flavour_has_reach(attk_flavour);
 }
 
 bool melee_attack::handle_phase_attempted()
@@ -343,9 +342,9 @@ bool melee_attack::handle_phase_dodged()
         // FIXME: player's attack is -1, even for auxes
         && effective_attack_number <= 0)
     {
-        if (defender->is_player()
-                ? you.has_mutation(MUT_REFLEXIVE_HEADBUTT)
-                : mons_species(mons_base_type(*defender->as_monster()))
+        if (defender->is_player() ?
+                you.species == SP_MINOTAUR :
+                mons_species(mons_base_type(*defender->as_monster()))
                     == MONS_MINOTAUR)
         {
             do_minotaur_retaliation();
@@ -549,8 +548,7 @@ bool melee_attack::handle_phase_aux()
 {
     if (attacker->is_player()
         && !cleaving
-        && wu_jian_attack != WU_JIAN_ATTACK_TRIGGERED_AUX
-        && !is_projected)
+        && wu_jian_attack != WU_JIAN_ATTACK_TRIGGERED_AUX)
     {
         // returns whether an aux attack successfully took place
         // additional attacks from cleave don't get aux
@@ -693,8 +691,7 @@ bool melee_attack::handle_phase_end()
     if (!cleave_targets.empty())
     {
         attack_cleave_targets(*attacker, cleave_targets, attack_number,
-                              effective_attack_number, wu_jian_attack,
-                              is_projected);
+                              effective_attack_number, wu_jian_attack);
     }
 
     // Check for passive mutation effects.
@@ -818,8 +815,7 @@ bool melee_attack::attack()
         handle_phase_blocked();
     else
     {
-        if (attacker != defender
-            && (adjacent(defender->pos(), attack_position) || is_projected)
+        if (attacker != defender && adjacent(defender->pos(), attack_position)
             && !is_riposte)
         {
             // Check for defender Spines
@@ -1200,11 +1196,11 @@ bool melee_attack::player_gets_aux_punch()
 
     // No punching with a shield or 2-handed wpn.
     // Octopodes aren't affected by this, though!
-    if (you.arm_count() <= 2 && !you.has_usable_offhand())
+    if (you.species != SP_OCTOPODE && !you.has_usable_offhand())
         return false;
 
     // Octopodes get more tentacle-slaps.
-    return x_chance_in_y(you.arm_count() > 2 ? 3 : 2,
+    return x_chance_in_y(you.species == SP_OCTOPODE ? 3 : 2,
                          6);
 }
 
@@ -1337,8 +1333,7 @@ bool melee_attack::player_aux_apply(unarmed_attack_type atk)
                 poison_monster(defender->as_monster(), &you);
 
             // Normal vampiric biting attack, not if already got stabbing special.
-            if (damage_brand == SPWPN_VAMPIRISM
-                && you.has_mutation(MUT_VAMPIRISM)
+            if (damage_brand == SPWPN_VAMPIRISM && you.species == SP_VAMPIRE
                 && (!stab_attempt || stab_bonus <= 0))
             {
                 _player_vampire_draws_blood(defender->as_monster(), damage_done);
@@ -1712,7 +1707,8 @@ void melee_attack::set_attack_verb(int damage)
             else if (damage < HIT_STRONG)
                 attack_verb = "pummel";
             else if (defender->is_monster()
-                     && mons_genus(defender->type) == MONS_FORMICID)
+                     && (mons_genus(defender->type) == MONS_WORKER_ANT
+                         || mons_genus(defender->type) == MONS_FORMICID))
             {
                 attack_verb = "squash";
                 verb_degree = "like the proverbial ant";
@@ -1794,7 +1790,7 @@ bool melee_attack::player_monattk_hit_effects()
         return false;
 
     // Thirsty vampires will try to use a stabbing situation to draw blood.
-    if (you.has_mutation(MUT_VAMPIRISM)
+    if (you.species == SP_VAMPIRE
         && damage_done > 0
         && stab_attempt
         && stab_bonus > 0)
@@ -2271,8 +2267,7 @@ int melee_attack::post_roll_to_hit_modifiers(int mhit, bool random)
 
 void melee_attack::player_stab_check()
 {
-    if (!is_projected)
-        attack::player_stab_check();
+    attack::player_stab_check();
 }
 
 /**
@@ -2394,12 +2389,6 @@ bool melee_attack::mons_do_poison()
     {
         amount = random_range(attacker->get_hit_dice() * 2,
                               attacker->get_hit_dice() * 4);
-    }
-
-    if (attacker->as_monster()->has_ench(ENCH_CONCENTRATE_VENOM))
-    {
-        return curare_actor(attacker, defender, 2, "concentrated venom",
-                            attacker->name(DESC_PLAIN));
     }
 
     if (!defender->poison(attacker, amount))
@@ -2677,11 +2666,6 @@ void melee_attack::mons_apply_attack_flavour()
             blink_fineff::schedule(attacker);
         break;
 
-    case AF_BLINK_WITH:
-        if (coinflip())
-            blink_fineff::schedule(attacker, defender);
-        break;
-
     case AF_CONFUSE:
         if (attk_type == AT_SPORE)
         {
@@ -2862,12 +2846,10 @@ void melee_attack::mons_apply_attack_flavour()
     case AF_ENGULF:
         if (x_chance_in_y(2, 3) && attacker->can_constrict(defender, true))
         {
-            const bool watery = attacker->type != MONS_QUICKSILVER_OOZE;
             if (defender->is_player() && !you.duration[DUR_WATER_HOLD])
             {
                 you.duration[DUR_WATER_HOLD] = 10;
                 you.props["water_holder"].get_int() = attacker->as_monster()->mid;
-                you.props["water_hold_substance"].get_string() = watery ? "water" : "ooze";
             }
             else if (defender->is_monster()
                      && !defender->as_monster()->has_ench(ENCH_WATER_HOLD))
@@ -2880,11 +2862,10 @@ void melee_attack::mons_apply_attack_flavour()
 
             if (needs_message)
             {
-                mprf("%s %s %s%s!",
+                mprf("%s %s %s in water!",
                      atk_name(DESC_THE).c_str(),
                      attacker->conj_verb("engulf").c_str(),
-                     defender_name(true).c_str(),
-                     watery ? " in water" : "");
+                     defender_name(true).c_str());
             }
         }
 
@@ -3324,17 +3305,9 @@ bool melee_attack::do_knockback(bool trample)
  */
 void melee_attack::cleave_setup()
 {
-    // Don't cleave on a self-attack attack.
+    // Don't cleave on a self-attack.
     if (attacker->pos() == defender->pos())
         return;
-
-    // Allow Gyre & Gimble to 'cleave' when projected, but not other attacks.
-    if (is_projected)
-    {
-        if (weapon && is_unrandom_artefact(*weapon, UNRAND_GYRE))
-            cleave_targets.push_back(defender);
-        return;
-    }
 
     // We need to get the list of the remaining potential targets now because
     // if the main target dies, its position will be lost.
@@ -3408,9 +3381,8 @@ bool melee_attack::_extra_aux_attack(unarmed_attack_type atk)
     switch (atk)
     {
     case UNAT_CONSTRICT:
-        return you.get_mutation_level(MUT_CONSTRICTING_TAIL) >= 2
-                || you.has_mutation(MUT_TENTACLE_ARMS)
-                    && you.has_usable_tentacle();
+        return you.get_mutation_level(MUT_CONSTRICTING_TAIL)
+                || you.species == SP_OCTOPODE && you.has_usable_tentacle();
 
     case UNAT_KICK:
         return you.has_usable_hooves()
@@ -3424,10 +3396,7 @@ bool melee_attack::_extra_aux_attack(unarmed_attack_type atk)
         return you.get_mutation_level(MUT_HORNS) && !one_chance_in(3);
 
     case UNAT_TAILSLAP:
-        return you.has_tail()
-            // constricting tails are too slow to slap
-            && !you.has_mutation(MUT_CONSTRICTING_TAIL)
-            && coinflip();
+        return you.has_usable_tail() && coinflip();
 
     case UNAT_PSEUDOPODS:
         return you.has_usable_pseudopods() && !one_chance_in(3);
@@ -3496,7 +3465,8 @@ int melee_attack::calc_mon_to_hit_base()
 {
     const bool fighter = attacker->is_monster()
                          && attacker->as_monster()->is_fighter();
-    return mon_to_hit_base(attacker->get_hit_dice(), fighter, false);
+    const int hd_mult = fighter ? 25 : 15;
+    return 18 + attacker->get_hit_dice() * hd_mult / 10;
 }
 
 /**
@@ -3557,7 +3527,7 @@ int melee_attack::calc_damage()
 bool melee_attack::_player_vampire_draws_blood(const monster* mon, const int damage,
                                                bool needs_bite_msg)
 {
-    ASSERT(you.has_mutation(MUT_VAMPIRISM));
+    ASSERT(you.species == SP_VAMPIRE);
 
     if (!_vamp_wants_blood_from_monster(mon) ||
         (!adjacent(defender->pos(), attack_position) && needs_bite_msg))
@@ -3604,7 +3574,7 @@ bool melee_attack::apply_damage_brand(const char *what)
 
 bool melee_attack::_vamp_wants_blood_from_monster(const monster* mon)
 {
-    return you.has_mutation(MUT_VAMPIRISM)
+    return you.species == SP_VAMPIRE
            && !you.vampire_alive
            && actor_is_susceptible_to_vampirism(*mon)
            && mons_has_blood(mon->type);

@@ -96,12 +96,11 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
 
         glyph_mode_font_name: function ()
         {
-            var glyph_scale;
+            var glyph_scale = window.devicePixelRatio;
             if (this.ui_state == enums.ui.VIEW_MAP)
-                glyph_scale = options.get("tile_map_scale");
+                glyph_scale *= options.get("tile_map_scale");
             else
-                glyph_scale = options.get("tile_viewport_scale");
-            glyph_scale = ((glyph_scale - 100) / 2 + 100) * window.devicePixelRatio;
+                glyph_scale *= options.get("tile_viewport_scale");
 
             return (Math.floor(this.glyph_mode_font_size * glyph_scale / 100)
                 + "px " + this.glyph_mode_font);
@@ -799,7 +798,7 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             this.draw_ray(x, y, cell);
         },
 
-        draw_foreground: function(x, y, map_cell, img_scale)
+        draw_foreground: function(x, y, map_cell)
         {
             var cell = map_cell.t;
             var fg = cell.fg;
@@ -820,9 +819,9 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                         this.set_nonsubmerged_clip(x, y, 20);
 
                         if (base_idx)
-                            this.draw_main(base_idx, x, y, img_scale);
+                            this.draw_main(base_idx, x, y);
 
-                        this.draw_main(fg_idx, x, y, img_scale);
+                        this.draw_main(fg_idx, x, y);
                     }
                     finally
                     {
@@ -836,9 +835,9 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                         this.set_submerged_clip(x, y, 20);
 
                         if (base_idx)
-                            this.draw_main(base_idx, x, y, img_scale);
+                            this.draw_main(base_idx, x, y);
 
-                        this.draw_main(fg_idx, x, y, img_scale);
+                        this.draw_main(fg_idx, x, y);
                     }
                     finally
                     {
@@ -848,271 +847,270 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                 else
                 {
                     if (base_idx)
-                        this.draw_main(base_idx, x, y, img_scale);
+                        this.draw_main(base_idx, x, y);
 
-                    this.draw_main(fg_idx, x, y, img_scale);
+                    this.draw_main(fg_idx, x, y);
                 }
             }
             else if (options.get("tile_display_mode") == "hybrid")
             {
                 this.render_glyph(x, y, map_cell, true);
                 this.draw_ray(x, y, cell);
-                img_scale = undefined; // TODO: make this work?
             }
 
             if (fg.NET)
-                this.draw_icon(icons.TRAP_NET, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.TRAP_NET, x, y);
 
             if (fg.WEB)
-                this.draw_icon(icons.TRAP_WEB, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.TRAP_WEB, x, y);
 
             if (fg.S_UNDER)
-                this.draw_icon(icons.SOMETHING_UNDER, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.SOMETHING_UNDER, x, y);
 
             if (fg.MIMIC_INEPT)
-                this.draw_icon(icons.INEPT_MIMIC, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.INEPT_MIMIC, x, y);
             else if (fg.MIMIC)
-                this.draw_icon(icons.MIMIC, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MIMIC, x, y);
             else if (fg.MIMIC_RAVEN)
-                this.draw_icon(icons.RAVENOUS_MIMIC, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.RAVENOUS_MIMIC, x, y);
 
             // Pet mark
             if (fg.PET)
-                this.draw_icon(icons.FRIENDLY, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.FRIENDLY, x, y);
             else if (fg.GD_NEUTRAL)
-                this.draw_icon(icons.GOOD_NEUTRAL, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.GOOD_NEUTRAL, x, y);
             else if (fg.NEUTRAL)
-                this.draw_icon(icons.NEUTRAL, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.NEUTRAL, x, y);
 
             //These icons are in the lower right, so status_shift doesn't need changing.
             if (fg.BERSERK)
-                this.draw_icon(icons.BERSERK, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.BERSERK, x, y);
             if (fg.IDEALISED)
-                this.draw_icon(icons.IDEALISED, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.IDEALISED, x, y);
 
 
             var status_shift = 0;
             if (fg.STAB)
             {
-                this.draw_icon(icons.STAB_BRAND, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.STAB_BRAND, x, y);
                 status_shift += 12;
             }
             else if (fg.MAY_STAB)
             {
-                this.draw_icon(icons.MAY_STAB_BRAND, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MAY_STAB_BRAND, x, y);
                 status_shift += 7;
             }
             else if (fg.FLEEING)
             {
-                this.draw_icon(icons.FLEEING, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.FLEEING, x, y);
                 status_shift += 3;
             }
 
             if (fg.POISON)
             {
-                this.draw_icon(icons.POISON, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.POISON, x, y, -status_shift, 0);
                 status_shift += 5;
             }
             else if (fg.MORE_POISON)
             {
-                this.draw_icon(icons.MORE_POISON, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.MORE_POISON, x, y, -status_shift, 0);
                 status_shift += 5;
             }
             else if (fg.MAX_POISON)
             {
-                this.draw_icon(icons.MAX_POISON, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.MAX_POISON, x, y, -status_shift, 0);
                 status_shift += 5;
             }
 
             if (fg.STICKY_FLAME)
             {
-                this.draw_icon(icons.STICKY_FLAME, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.STICKY_FLAME, x, y, -status_shift, 0);
                 status_shift += 7;
             }
             if (fg.INNER_FLAME)
             {
-                this.draw_icon(icons.INNER_FLAME, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.INNER_FLAME, x, y, -status_shift, 0);
                 status_shift += 7;
             }
             if (fg.CONSTRICTED)
             {
-                this.draw_icon(icons.CONSTRICTED, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.CONSTRICTED, x, y, -status_shift, 0);
                 status_shift += 11;
             }
             if (fg.VILE_CLUTCH)
             {
-                this.draw_icon(icons.VILE_CLUTCH, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.VILE_CLUTCH, x, y, -status_shift, 0);
                 status_shift += 11;
             }
             if (fg.POSSESSABLE)
             {
-                this.draw_icon(icons.POSSESSABLE, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.POSSESSABLE, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.GLOWING)
             {
-                this.draw_icon(icons.GLOWING, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.GLOWING, x, y, -status_shift, 0);
                 status_shift += 8;
             }
             if (fg.SWIFT)
             {
-                this.draw_icon(icons.SWIFT, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.SWIFT, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.HASTED)
             {
-                this.draw_icon(icons.HASTED, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.HASTED, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.SLOWED)
             {
-                this.draw_icon(icons.SLOWED, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.SLOWED, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.MIGHT)
             {
-                this.draw_icon(icons.MIGHT, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.MIGHT, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.CORRODED)
             {
-                this.draw_icon(icons.CORRODED, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.CORRODED, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.DRAIN)
             {
-                this.draw_icon(icons.DRAIN, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.DRAIN, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.PAIN_MIRROR)
             {
-                this.draw_icon(icons.PAIN_MIRROR, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.PAIN_MIRROR, x, y, -status_shift, 0);
                 status_shift += 7;
             }
             if (fg.PETRIFYING)
             {
-                this.draw_icon(icons.PETRIFYING, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.PETRIFYING, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.PETRIFIED)
             {
-                this.draw_icon(icons.PETRIFIED, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.PETRIFIED, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.BLIND)
             {
-                this.draw_icon(icons.BLIND, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.BLIND, x, y, -status_shift, 0);
                 status_shift += 10;
             }
             if (fg.BOUND_SOUL)
             {
-                this.draw_icon(icons.BOUND_SOUL, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.BOUND_SOUL, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.INFESTED)
             {
-                this.draw_icon(icons.INFESTED, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.INFESTED, x, y, -status_shift, 0);
                 status_shift += 6;
             }
             if (fg.RECALL)
             {
-                this.draw_icon(icons.RECALL, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.RECALL, x, y, -status_shift, 0);
                 status_shift += 9;
             }
             if (fg.SLOWLY_DYING)
             {
-                this.draw_icon(icons.SLOWLY_DYING, x, y, -status_shift, 0, img_scale);
+                this.draw_icon(icons.SLOWLY_DYING, x, y, -status_shift, 0);
                 status_shift += 10;
             }
 
             // Anim. weap. and summoned might overlap, but that's okay
             if (fg.ANIM_WEP)
-                this.draw_icon(icons.ANIMATED_WEAPON, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.ANIMATED_WEAPON, x, y);
             if (fg.SUMMONED)
-                this.draw_icon(icons.SUMMONED, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.SUMMONED, x, y);
             if (fg.PERM_SUMMON)
-                this.draw_icon(icons.PERM_SUMMON, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.PERM_SUMMON, x, y);
 
             if (bg.UNSEEN && (bg.value || fg.value))
-                this.draw_icon(icons.MESH, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MESH, x, y);
 
             if (bg.OOR && (bg.value || fg.value))
-                this.draw_icon(icons.OOR_MESH, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.OOR_MESH, x, y);
 
             if (bg.MM_UNSEEN && (bg.value || fg.value))
-                this.draw_icon(icons.MAGIC_MAP_MESH, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MAGIC_MAP_MESH, x, y);
 
             // Don't let the "new stair" icon cover up any existing icons, but
             // draw it otherwise.
             if (bg.NEW_STAIR && status_shift == 0)
-                this.draw_icon(icons.NEW_STAIR, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.NEW_STAIR, x, y);
 
             if (bg.NEW_TRANSPORTER && status_shift == 0)
-                this.draw_icon(icons.NEW_TRANSPORTER, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.NEW_TRANSPORTER, x, y);
 
             if (bg.EXCL_CTR && bg.UNSEEN)
-                this.draw_icon(icons.TRAVEL_EXCLUSION_CENTRE_FG, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.TRAVEL_EXCLUSION_CENTRE_FG, x, y);
             else if (bg.TRAV_EXCL && bg.UNSEEN)
-                this.draw_icon(icons.TRAVEL_EXCLUSION_FG, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.TRAVEL_EXCLUSION_FG, x, y);
 
             // Tutorial cursor takes precedence over other cursors.
             if (bg.TUT_CURSOR)
             {
-                this.draw_icon(icons.TUTORIAL_CURSOR, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.TUTORIAL_CURSOR, x, y);
             }
             else if (bg.CURSOR1)
             {
-                this.draw_icon(icons.CURSOR, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.CURSOR, x, y);
             }
             else if (bg.CURSOR2)
             {
-                this.draw_icon(icons.CURSOR2, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.CURSOR2, x, y);
             }
             else if (bg.CURSOR3)
             {
-                this.draw_icon(icons.CURSOR3, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.CURSOR3, x, y);
             }
 
             if (cell.travel_trail & 0xF)
             {
                 this.draw_icon(icons.TRAVEL_PATH_FROM +
-                               (cell.travel_trail & 0xF) - 1, x, y, undefined, undefined, img_scale);
+                               (cell.travel_trail & 0xF) - 1, x, y);
             }
             if (cell.travel_trail & 0xF0)
             {
                 this.draw_icon(icons.TRAVEL_PATH_TO +
-                        ((cell.travel_trail & 0xF0) >> 4) - 1, x, y, undefined, undefined, img_scale);
+                               ((cell.travel_trail & 0xF0) >> 4) - 1, x, y);
             }
 
             if (fg.MDAM_LIGHT)
-                this.draw_icon(icons.MDAM_LIGHTLY_DAMAGED, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MDAM_LIGHTLY_DAMAGED, x, y);
             else if (fg.MDAM_MOD)
-                this.draw_icon(icons.MDAM_MODERATELY_DAMAGED, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MDAM_MODERATELY_DAMAGED, x, y);
             else if (fg.MDAM_HEAVY)
-                this.draw_icon(icons.MDAM_HEAVILY_DAMAGED, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MDAM_HEAVILY_DAMAGED, x, y);
             else if (fg.MDAM_SEV)
-                this.draw_icon(icons.MDAM_SEVERELY_DAMAGED, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MDAM_SEVERELY_DAMAGED, x, y);
             else if (fg.MDAM_ADEAD)
-                this.draw_icon(icons.MDAM_ALMOST_DEAD, x, y, undefined, undefined, img_scale);
+                this.draw_icon(icons.MDAM_ALMOST_DEAD, x, y);
 
             if (options.get("tile_show_demon_tier") === true)
             {
                 if (fg.DEMON_1)
-                    this.draw_icon(icons.DEMON_NUM1, x, y, undefined, undefined, img_scale);
+                    this.draw_icon(icons.DEMON_NUM1, x, y);
                 else if (fg.DEMON_2)
-                    this.draw_icon(icons.DEMON_NUM2, x, y, undefined, undefined, img_scale);
+                    this.draw_icon(icons.DEMON_NUM2, x, y);
                 else if (fg.DEMON_3)
-                    this.draw_icon(icons.DEMON_NUM3, x, y, undefined, undefined, img_scale);
+                    this.draw_icon(icons.DEMON_NUM3, x, y);
                 else if (fg.DEMON_4)
-                    this.draw_icon(icons.DEMON_NUM4, x, y, undefined, undefined, img_scale);
+                    this.draw_icon(icons.DEMON_NUM4, x, y);
                 else if (fg.DEMON_5)
-                    this.draw_icon(icons.DEMON_NUM5, x, y, undefined, undefined, img_scale);
+                    this.draw_icon(icons.DEMON_NUM5, x, y);
             }
         },
 
 
         // Helper functions for drawing from specific textures
-        draw_tile: function(idx, x, y, mod, ofsx, ofsy, y_max, centre, img_scale)
+        draw_tile: function(idx, x, y, mod, ofsx, ofsy, y_max, centre)
         {
             var info = mod.get_tile_info(idx);
             var img = get_img(mod.get_img(idx));
@@ -1120,19 +1118,6 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             {
                 throw ("Tile not found: " + idx);
             }
-
-            // this somewhat convoluted approach is to avoid fp scaling
-            // artifacts at scale 1.0
-            var img_xscale = this.x_scale;
-            var img_yscale = this.y_scale;
-            if (img_scale != undefined)
-            {
-                img_xscale = img_xscale * img_scale;
-                img_yscale = img_yscale * img_scale;
-            }
-            else
-                img_scale = 1.0;
-
             centre = centre === undefined ? true : centre;
             var size_ox = !centre ? 0 : 32 / 2 - info.w / 2;
             var size_oy = !centre ? 0 : 32 - info.h;
@@ -1164,44 +1149,36 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             this.ctx.drawImage(img,
                                info.sx, info.sy + sy - pos_sy_adjust,
                                w, h + ey - pos_ey_adjust,
-                               x + total_x_offset * img_xscale,
-                               y + sy * img_yscale,
-                               w * img_xscale,
-                               (h + ey - pos_ey_adjust) * img_yscale)
+                               x + total_x_offset * this.x_scale,
+                               y + sy * this.y_scale,
+                               w * this.x_scale,
+                               (h + ey - pos_ey_adjust) * this.y_scale)
         },
 
-        draw_dngn: function(idx, x, y, img_scale)
+        draw_dngn: function(idx, x, y)
         {
-            this.draw_tile(idx, x, y, dngn,
-                undefined, undefined, undefined, undefined,
-                img_scale);
+            this.draw_tile(idx, x, y, dngn);
         },
 
-        draw_main: function(idx, x, y, img_scale)
+        draw_main: function(idx, x, y)
         {
-            this.draw_tile(idx, x, y, main,
-                undefined, undefined, undefined, undefined,
-                img_scale);
+            this.draw_tile(idx, x, y, main);
         },
 
-        draw_player: function(idx, x, y, ofsx, ofsy, y_max, img_scale)
+        draw_player: function(idx, x, y, ofsx, ofsy, y_max)
         {
-            this.draw_tile(idx, x, y, tileinfo_player, ofsx, ofsy, y_max,
-                undefined,
-                img_scale);
+            this.draw_tile(idx, x, y, tileinfo_player, ofsx, ofsy, y_max);
         },
 
-        draw_icon: function(idx, x, y, ofsx, ofsy, img_scale)
+        draw_icon: function(idx, x, y, ofsx, ofsy)
         {
-            this.draw_tile(idx, x, y, icons, ofsx, ofsy,
-                undefined, undefined,
-                img_scale);
+            this.draw_tile(idx, x, y, icons, ofsx, ofsy);
         },
 
-        draw_from_texture: function (idx, x, y, tex, ofsx, ofsy, y_max, centre, img_scale)
+        draw_from_texture: function (idx, x, y, tex, ofsx, ofsy, y_max, centre)
         {
             var mod = tileinfos(tex);
-            this.draw_tile(idx, x, y, mod, ofsx, ofsy, y_max, centre, img_scale);
+            this.draw_tile(idx, x, y, mod, ofsx, ofsy, y_max, centre);
         },
     });
 

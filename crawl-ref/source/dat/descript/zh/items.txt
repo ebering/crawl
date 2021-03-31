@@ -507,6 +507,10 @@ scroll of magic mapping
 这个卷轴向使用者揭示出其周围的环境，但它的魔力不足以显示出秘门后的地形，
 也无法显示出完全封闭的区域。
 %%%%
+scroll of random uselessness
+
+你也许会为自己能成功使用这个卷轴感到自豪，但其实它真的一点用都没有。
+%%%%
 scroll of remove curse
 
 阅读这个卷轴会移除你装备的物品上的诅咒。
@@ -590,6 +594,35 @@ trishula
 troll leather armour
 
 一副用巨魔外皮制成的铠甲。它能赋予穿戴者神奇的肢体再生能力（对巨魔无效）。
+%%%%
+wand of cold
+
+一件发射寒冰矢的魔法道具。
+%%%%
+wand of disintegration
+
+这件魔法道具能使几乎一切物质分解——就连坚硬的雕像都不例外，至于解离血肉之躯，
+那更是不在话下。
+%%%%
+wand of enslavement
+
+这件魔法道具能让一个生物暂时变成你的忠心奴仆。
+%%%%
+wand of fire
+
+一件发射烈火矢的魔法道具。
+%%%%
+wand of fireball
+
+一件发射爆裂火球的魔法道具。
+%%%%
+wand of invisibility
+
+这件魔法道具能使目标生物隐形。
+%%%%
+wand of magic darts
+
+这件魔法道具能发射一种百发百中的小型魔法弹。
 %%%%
 wand of polymorph
 

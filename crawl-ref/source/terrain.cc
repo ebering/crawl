@@ -586,7 +586,7 @@ dungeon_feature_type altar_for_god(god_type god)
 
 /** Is this feature an altar to any god?
  */
-FEATFN_MEMOIZED(feat_is_altar, grid)
+bool feat_is_altar(dungeon_feature_type grid)
 {
     return feat_altar_god(grid) != GOD_NO_GOD;
 }
@@ -654,7 +654,7 @@ bool feat_is_reachable_past(dungeon_feature_type feat)
  *  @param feat the feature.
  *  @returns true for altars, stairs/portals, and malign gateways (???).
  */
-FEATFN_MEMOIZED(feat_is_critical, feat)
+bool feat_is_critical(dungeon_feature_type feat)
 {
     return feat_stair_direction(feat) != CMD_NO_CMD
            || feat_altar_god(feat) != GOD_NO_GOD
@@ -925,28 +925,6 @@ void feat_splash_noise(dungeon_feature_type feat)
     }
 }
 
-FEATFN_MEMOIZED(feat_suppress_blood, feat)
-{
-    if (feat_is_tree(feat))
-        return true;
-
-    if (feat == DNGN_DRY_FOUNTAIN)
-        return true;
-
-    // covers shops and altars
-    if (feat_stair_direction(feat) != CMD_NO_CMD)
-        return true;
-
-    if (feat == DNGN_MALIGN_GATEWAY)
-        return true;
-
-    if (feat == DNGN_TRAP_SHAFT)
-        return true;
-
-    return false;
-
-}
-
 /** Does this feature destroy any items that fall into it?
  */
 bool feat_destroys_items(dungeon_feature_type feat)
@@ -959,10 +937,7 @@ bool feat_destroys_items(dungeon_feature_type feat)
 bool feat_eliminates_items(dungeon_feature_type feat)
 {
     return feat_destroys_items(feat)
-            // intentionally use the species version rather than the player
-            // version: switching to an amphibious form doesn't give you access
-            // to the items.
-            || feat == DNGN_DEEP_WATER && !species::likes_water(you.species);
+           || feat == DNGN_DEEP_WATER && !species_likes_water(you.species);
 }
 
 static coord_def _dgn_find_nearest_square(
@@ -1668,7 +1643,7 @@ void fall_into_a_pool(dungeon_feature_type terrain)
         if (you.can_water_walk() || form_likes_water())
             return;
 
-        if (species::likes_water(you.species) && !you.transform_uncancellable)
+        if (species_likes_water(you.species) && !you.transform_uncancellable)
         {
             emergency_untransform();
             return;
@@ -1970,12 +1945,9 @@ bool is_boring_terrain(dungeon_feature_type feat)
     if (!is_notable_terrain(feat))
         return true;
 
-    // Altars in the temple are boring, as are any you can never use.
-    if (feat_is_altar(feat) && (player_in_branch(BRANCH_TEMPLE)
-        || !player_can_join_god(feat_altar_god(feat), false)))
-    {
+    // Altars in the temple are boring.
+    if (feat_is_altar(feat) && player_in_branch(BRANCH_TEMPLE))
         return true;
-    }
 
     // Only note the first entrance to the Abyss/Pan/Hell
     // which is found.

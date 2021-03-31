@@ -93,16 +93,6 @@ bool actor::is_habitable(const coord_def &_pos) const
     return is_habitable_feat(env.grid(_pos));
 }
 
-bool actor::is_dragonkind() const {
-    return mons_class_is_draconic(mons_species());
-}
-
-int actor::dragon_level() const {
-    if (!is_dragonkind())
-        return 0;
-    return min(get_experience_level(), 18);
-}
-
 bool actor::handle_trap()
 {
     trap_def* trap = trap_at(pos());
@@ -202,8 +192,7 @@ void actor::shield_block_succeeded()
 
 int actor::inaccuracy() const
 {
-    const item_def *amu = slot_item(EQ_AMULET);
-    return amu && is_unrandom_artefact(*amu, UNRAND_AIR);
+    return wearing(EQ_AMULET, AMU_INACCURACY);
 }
 
 bool actor::res_corr(bool calc_unid, bool items) const
@@ -233,6 +222,12 @@ bool actor::holy_wrath_susceptible() const
 bool actor::has_notele_item(bool calc_unid, vector<const item_def *> *matches) const
 {
     return scan_artefacts(ARTP_PREVENT_TELEPORTATION, calc_unid, matches);
+}
+
+// permaswift effects like boots of running and lightning scales
+bool actor::run(bool calc_unid, bool items) const
+{
+    return items && wearing_ego(EQ_BOOTS, SPARM_RUNNING, calc_unid);
 }
 
 bool actor::angry(bool calc_unid, bool items) const
@@ -306,12 +301,11 @@ int actor::evokable_invis(bool calc_unid) const
 }
 
 // Return an int so we know whether an item is the sole source.
-int actor::equip_flight(bool calc_unid) const
+int actor::evokable_flight(bool calc_unid) const
 {
     if (is_player() && get_form()->forbids_flight())
         return 0;
 
-    // For the player, this is cached on ATTR_PERM_FLIGHT
     return wearing(EQ_RINGS, RING_FLIGHT, calc_unid)
            + wearing_ego(EQ_ALL_ARMOUR, SPARM_FLYING, calc_unid)
            + scan_artefacts(ARTP_FLY, calc_unid);
