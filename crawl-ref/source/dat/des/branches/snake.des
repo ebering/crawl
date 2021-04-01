@@ -1048,10 +1048,11 @@ WEIGHT:  20
 TAGS:    no_rotate
 ORIENT:  northwest
 MONS:    naga / nothing
-MONS:    nagaraja / nothing
+MONS:    nagaraja / salamander tyrant / nothing w:20
 MONS:    guardian serpent / nothing
 MONS:    naga warrior / naga sharpshooter w:5 / nothing w:15
-MONS:    naga mage w:40 / naga ritualist / naga sharpshooter / nothing w:60
+MONS:    naga mage w:20 / salamander mystic w:20 / \
+         naga ritualist / naga sharpshooter / nothing w:60
 MONS:    nagaraja / guardian serpent
 SHUFFLE: 'Y / "Z
 SHUFFLE: 'Y / 'Y / AB, "Z / CD
@@ -1116,8 +1117,9 @@ PLACE:  Snake:$
 WEIGHT: 20
 ORIENT: southwest
 TAGS:   no_rotate
-MONS:   nagaraja, naga
-MONS:   naga mage w:40 / naga ritualist / naga sharpshooter
+MONS:   nagaraja / salamander tyrant, naga
+MONS:   naga mage w:20 / salamander mystic w:20 / \
+        naga ritualist / naga sharpshooter
 MONS:   naga warrior / naga sharpshooter w:5
 SUBST:  C = c .:1
 SUBST:  v = x .:1
@@ -1170,8 +1172,9 @@ TAGS:    no_rotate
 ORIENT:  southwest
 MONS:    naga
 MONS:    naga warrior / naga sharpshooter w:5
-MONS:    naga mage w:40 / naga ritualist / naga sharpshooter
-MONS:    nagaraja
+MONS:    naga mage w:20 / salamander mystic w:20 / \
+         naga ritualist / naga sharpshooter
+MONS:    nagaraja / salamander tyrant
 SHUFFLE: ABC
 SUBST:   A = x, B : xx., C = ., c : c:20 v:5, 1 = 111.
 NSUBST:  2 = 6 = 23 / 6:. / * = 23..
@@ -1233,16 +1236,16 @@ TAGS:   no_monster_gen
 PLACE:  Snake:$
 ORIENT: north
 TAGS:   no_rotate
-MONS:   naga
-MONS:   naga mage w:40 / naga ritualist / naga sharpshooter
+MONS:   naga / salamander
+MONS:   salamander mystic w:30 / naga mage / naga ritualist / naga sharpshooter
 MONS:   naga warrior / naga sharpshooter w:5
-MONS:   nagaraja, guardian serpent
+MONS:   nagaraja / salamander tyrant w:20, guardian serpent
 MONS:   w:21 anaconda / black mamba / shock serpent w:7 / mana viper w:13 / \
         nothing w:30
 KITEM:  O = serpentine rune of Zot
 KMONS:  OS = guardian serpent
 KFEAT:  7 = lava
-KMONS:  7 = salamander mystic
+KMONS:  7 = salamander mystic / salamander tyrant w:5
 KMONS:  8 = lindwurm
 SUBST:  5 = 5.
 NSUBST: 7 = 4:8 / * = l, l = 3:7 / 3 = 7l / *:l, . = 6:1 / *:.
@@ -1295,9 +1298,10 @@ PLACE:  Snake:$
 ORIENT: centre
 MONS:   naga / nothing
 MONS:   naga warrior / naga sharpshooter w:5 / naga w:15
-MONS:   naga mage w:20 / naga ritualist / naga sharpshooter / naga w:40
-MONS:   nagaraja / guardian serpent
-MONS:   nagaraja w:20 / naga warrior w:5 / naga mage w:5 / \
+MONS:   naga mage / salamander mystic / naga ritualist / \
+        naga sharpshooter / naga w:40
+MONS:   nagaraja / salamander tyrant / guardian serpent w:20
+MONS:   nagaraja / salamander tyrant / naga warrior w:5 / naga mage w:5 / \
         naga ritualist w:5 / naga sharpshooter w:5
 NSUBST: O = 1:A / 1:B
 KITEM:  A = serpentine rune of Zot
@@ -1333,9 +1337,10 @@ NAME: grunt_snake_rune_pools
 PLACE: Snake:$
 TAGS: no_trap_gen no_monster_gen
 ORIENT: north
-MONS: nagaraja, guardian serpent
+MONS: nagaraja / salamander tyrant, guardian serpent
 MONS: naga warrior / naga sharpshooter w:5
-MONS: naga mage w:40 / naga ritualist / naga sharpshooter
+MONS: naga mage w:20 / salamander mystic w:20 / \
+      naga ritualist / naga sharpshooter
 MONS: naga
 MONS: guardian serpent w:15 / anaconda w:30 / black mamba / \
       mana viper / shock serpent
@@ -1381,12 +1386,13 @@ ENDMAP
 NAME:   grunt_snake_rune_serpentine_throne
 PLACE:  Snake:$
 ORIENT: north
-KMONS:  L = nagaraja
+KMONS:  L = nagaraja / salamander tyrant
 KITEM:  O = serpentine rune of Zot
 KFEAT:  A = altar_okawaru / altar_makhleb / altar_trog
-MONS:   nagaraja w:20 / naga warrior w:5 / naga mage w:5 / \
+MONS:   nagaraja / salamander tyrant / naga warrior w:5 / naga mage w:5 / \
         naga ritualist w:5 / naga sharpshooter w:5
-MONS:   naga mage w:20 / naga ritualist / naga sharpshooter / naga w:40
+MONS:   naga mage / salamander mystic /
+        naga ritualist / naga sharpshooter / naga w:40
 MONS:   naga / nothing
 MONS:   anaconda / guardian serpent
 MAP
@@ -1434,14 +1440,16 @@ PLACE:  Snake:$
 ORIENT: north
 MONS:   naga / nothing
 MONS:   naga warrior / naga sharpshooter w:5 / naga w:15 / nothing
-MONS:   naga mage w:20 / naga ritualist / naga sharpshooter / naga w:30 / \
-        nothing w:20
+MONS:   naga mage / salamander mystic / naga ritualist / naga sharpshooter / \
+        naga w:30 / nothing w:20
 MONS:   guardian serpent / salamander mystic w:5 / naga ritualist w:5 / \
         nothing
-MONS:   nagaraja w:30 / naga warrior w:5 / naga sharpshooter w:5
+MONS:   nagaraja w:15 / salamander tyrant w:15 / \
+        naga warrior w:5 / naga sharpshooter w:5
 MONS:   anaconda / black mamba / shock serpent w:5 / mana viper
 
-KMONS:  Z = Vashnia / nagaraja, nagaraja
+KMONS:  Z = Vashnia / nagaraja w:5 / salamander tyrant w:5, \
+            nagaraja / salamander tyrant
 SUBST:  Z = ZZZ5
 
 NSUBST: 5 = 6:5 / *:55.
